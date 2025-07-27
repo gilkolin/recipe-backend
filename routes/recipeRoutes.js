@@ -30,6 +30,13 @@ const upload = multer({
 // Helper function to upload to Cloudinary
 const uploadToCloudinary = (buffer, filename) => {
     return new Promise((resolve, reject) => {
+        console.log('Starting Cloudinary upload for:', filename);
+        console.log('Cloudinary config check:', {
+            cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: !!process.env.CLOUDINARY_API_KEY,
+            api_secret: !!process.env.CLOUDINARY_API_SECRET
+        });
+        
         const timestamp = Date.now();
         const publicId = `recipe-${filename}-${timestamp}`;
         
@@ -42,8 +49,10 @@ const uploadToCloudinary = (buffer, filename) => {
             },
             (error, result) => {
                 if (error) {
+                    console.error('Cloudinary upload error:', error);
                     reject(error);
                 } else {
+                    console.log('Cloudinary upload success:', result.secure_url);
                     resolve(result.secure_url);
                 }
             }
