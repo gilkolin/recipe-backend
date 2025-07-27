@@ -100,8 +100,6 @@ const Recipe = mongoose.model('Recipe', recipeSchema);
 // POST a new recipe (with manual image upload)
 router.post('/', upload.single('image'), async (req, res) => {
     try {
-		router.post('/', upload.single('image'), async (req, res) => {
-    try {
         // Add this debugging block
         console.log('=== DEBUGGING START ===');
         console.log('File received:', !!req.file);
