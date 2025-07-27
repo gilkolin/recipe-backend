@@ -100,6 +100,31 @@ const Recipe = mongoose.model('Recipe', recipeSchema);
 // POST a new recipe (with manual image upload)
 router.post('/', upload.single('image'), async (req, res) => {
     try {
+		router.post('/', upload.single('image'), async (req, res) => {
+    try {
+        // Add this debugging block
+        console.log('=== DEBUGGING START ===');
+        console.log('File received:', !!req.file);
+        if (req.file) {
+            console.log('File details:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
+            });
+        }
+        
+        console.log('Cloudinary config test:', {
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
+            api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
+        });
+        console.log('=== DEBUGGING END ===');
+
+        // Your existing code continues here...
+        const { title, ingredients, instructions } = req.body;
+        // ... rest of your route
+		
+		
         const { title, ingredients, instructions } = req.body;
 
         // Validation
