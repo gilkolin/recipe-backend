@@ -1,18 +1,15 @@
-"scripts": {
-  "start": "node server.js"
-}
 {
   "name": "recipe-backend",
   "version": "1.0.0",
+  "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
