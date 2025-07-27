@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Share - Share Your Culinary Creations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .language-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 25px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .language-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 18px;
+            border-radius: 3px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .flag-israel {
+            background: linear-gradient(to bottom, 
+                #0038b8 0%, #0038b8 16.66%, 
+                white 16.66%, white 83.33%, 
+                #0038b8 83.33%, #0038b8 100%);
+            position: relative;
+        }
+
+        .flag-israel::before {
+            content: '✡';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0038b8;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .flag-usa {
+            background: linear-gradient(
+                to right,
+                #002868 0%, #002868 40%,
+                #bf0a30 40%, #bf0a30 46%,
+                white 46%, white 54%,
+                #bf0a30 54%, #bf0a30 60%,
+                white 60%, white 66%,
+                #bf0a30 66%, #bf0a30 72%,
+                white 72%, white 78%,
+                #bf0a30 78%, #bf0a30 84%,
+                white 84%, white 90%,
+                #bf0a30 90%, #bf0a30 100%
+            );
+            position: relative;
+        }
+
+        .flag-usa::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40%;
+            height: 100%;
+            background: #002868;
+        }
+
+        .language-toggle:hover .flag-icon {
+            transform: scale(1.1);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .recipe-form, .recipes-section {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recipe-form h2, .recipes-section h2 {
+            color: #4a5568;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            text-align: center;
+            position: relative;
+        }
+
+        .recipe-form h2::after, .recipes-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .ingredients-container, .instructions-container {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+        }
+
+        .ingredients-container:hover, .instructions-container:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .ingredient-item, .instruction-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .ingredient-item input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .ingredient-item input:first-child {
+            flex: 2;
+        }
+
+        .instruction-item input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .remove-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(197, 48, 48, 0.4);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #38a169, #2f855a);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 161, 105, 0.4);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            background: #f7fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+            transform: translateY(-2px);
+        }
+
+        .file-input-label.has-file {
+            border-color: #38a169;
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 18px;
+        }
+
+        .recipe-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .recipe-meta {
+            font-size: 0.9em;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .recipe-ingredients-preview {
+            font-size: 0.9em;
+            color: #4a5568;
+            opacity: 0.8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-recipe-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .ingredients-list, .instructions-list {
+            margin: 20px 0;
+        }
+
+        .ingredients-list h4, .instructions-list h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .ingredients-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ingredients-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .instructions-list ol {
+            padding-left: 0;
+            counter-reset: step-counter;
+        }
+
+        .instructions-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            padding-left: 50px;
+            counter-increment: step-counter;
+        }
+
+        .instructions-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #38a169, #2f855a);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 3000;
+            display: none;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4000;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hebrew RTL Support */
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        [dir="rtl"] .ingredient-item,
+        [dir="rtl"] .instruction-item {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .search-filter-bar {
+            flex-direction: row-reverse;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .recipe-form, .recipes-section {
+                padding: 20px;
+            }
+
+            .language-toggle {
+                position: static;
+                margin-bottom: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .search-filter-bar {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="language-toggle" onclick="toggleLanguage()">
+            <span class="flag-icon flag-israel" id="flag-icon"></span>
+            <span id="lang-toggle-text">עברית</span>
+        </button>
+
+        <div class="header">
+            <h1 id="site-title">Recipe Share</h1>
+            <p id="site-subtitle">Share Your Culinary Creations with the World</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Recipe Submission Form -->
+            <div class="recipe-form">
+                <h2 id="form-title">Add New Recipe</h2>
+                <form id="recipeForm">
+                    <div class="form-group">
+                        <label for="recipeTitle" id="title-label">Recipe Title</label>
+                        <input type="text" id="recipeTitle" required placeholder="Enter recipe title...">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="ingredients-label">Ingredients</label>
+                        <div class="ingredients-container" id="ingredientsContainer">
+                            <div class="ingredient-item">
+                                <input type="text" placeholder="Ingredient name..." required>
+                                <input type="text" placeholder="Amount..." required>
+                                <button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-btn" onclick="addIngredient()" id="add-ingredient-btn">+ Add Ingredient</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="instructions-label">Instructions</label>
+                        <div class="instructions-container" id="instructionsContainer">
+                            <div class="instruction-item">
+                                <input type="text" placeholder="Step 1..." required>
+                                <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-btn" onclick="addInstruction()" id="add-instruction-btn">+ Add Step</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipeImage" id="image-label">Recipe Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="recipeImage" class="file-input" accept="image/jpeg,image/jpg,image/png" onchange="handleFileSelect(this)">
+                            <label for="recipeImage" class="file-input-label" id="file-label">
+                                📷 Choose Image (Max 5MB)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn">Share Recipe</button>
+                </form>
+            </div>
+
+            <!-- Recipes Display Section -->
+            <div class="recipes-section">
+                <h2 id="recipes-title">Shared Recipes</h2>
+                
+                <div class="search-filter-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search recipes..." onkeyup="searchRecipes()">
+                </div>
+
+                <div class="recipes-grid" id="recipesGrid">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🍳</div>
+                        <h3 id="empty-title">No recipes yet!</h3>
+                        <p id="empty-subtitle">Be the first to share a delicious recipe</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Modal -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2 id="modalRecipeTitle"></h2>
+                <p id="modalRecipeDate"></p>
+            </div>
+            <div class="modal-body">
+                <img id="modalRecipeImage" class="modal-recipe-image" style="display: none;">
+                <div class="ingredients-list">
+                    <h4 id="modal-ingredients-title">Ingredients</h4>
+                    <ul id="modalIngredientsList"></ul>
+                </div>
+                <div class="instructions-list">
+                    <h4 id="modal-instructions-title">Instructions</h4>
+                    <ol id="modalInstructionsList"></ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Internationalization
+        const translations = {
+            en: {
+                'site-title': 'Recipe Share',
+                'site-subtitle': 'Share Your Culinary Creations with the World',
+                'form-title': 'Add New Recipe',
+                'title-label': 'Recipe Title',
+                'ingredients-label': 'Ingredients',
+                'instructions-label': 'Instructions',
+                'image-label': 'Recipe Image',
+                'submit-btn': 'Share Recipe',
+                'recipes-title': 'Shared Recipes',
+                'add-ingredient-btn': '+ Add Ingredient',
+                'add-instruction-btn': '+ Add Step',
+                'file-label': '📷 Choose Image (Max 5MB)',
+                'empty-title': 'No recipes yet!',
+                'empty-subtitle': 'Be the first to share a delicious recipe',
+                'modal-ingredients-title': 'Ingredients',
+                'modal-instructions-title': 'Instructions',
+                'search-placeholder': 'Search recipes...',
+                'ingredient-placeholder': 'Ingredient name...',
+                'amount-placeholder': 'Amount...',
+                'step-placeholder': 'Step'
+            },
+            he: {
+                'site-title': 'שיתוף מתכונים',
+                'site-subtitle': 'שתפו את היצירות הקולינריות שלכם עם העולם',
+                'form-title': 'הוסף מתכון חדש',
+                'title-label': 'כותרת המתכון',
+                'ingredients-label': 'מצרכים',
+                'instructions-label': 'הוראות הכנה',
+                'image-label': 'תמונת המתכון',
+                'submit-btn': 'שתף מתכון',
+                'recipes-title': 'מתכונים משותפים',
+                'add-ingredient-btn': '+ הוסף מצרך',
+                'add-instruction-btn': '+ הוסף שלב',
+                'file-label': '📷 בחר תמונה (מקסימום 5MB)',
+                'empty-title': 'אין מתכונים עדיין!',
+                'empty-subtitle': 'היו הראשונים לשתף מתכון טעים',
+                'modal-ingredients-title': 'מצרכים',
+                'modal-instructions-title': 'הוראות הכנה',
+                'search-placeholder': 'חפש מתכונים...',
+                'ingredient-placeholder': 'שם המצרך...',
+                'amount-placeholder': 'כמות...',
+                'step-placeholder': 'שלב'
+            }
+        };
+
+        let currentLang = 'en';
+        let recipes = [];
+        let recipeIdCounter = 1;
+
+        // Language toggle functionality
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'he' : 'en';
+            document.documentElement.setAttribute('lang', currentLang);
+            document.documentElement.setAttribute('dir', currentLang === 'he' ? 'rtl' : 'ltr');
+            
+            // Update all text content
+            Object.keys(translations[currentLang]).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.placeholder = translations[currentLang][key];
+                    } else {
+                        element.textContent = translations[currentLang][key];
+                    }
+                }
+            });
+
+            // Update language toggle button and flag
+            const flagIcon = document.getElementById('flag-icon');
+            const langText = document.getElementById('lang-toggle-text');
+            
+            if (currentLang === 'he') {
+                // When in Hebrew, show USA flag to switch to English
+                flagIcon.className = 'flag-icon flag-usa';
+                langText.textContent = 'English';
+            } else {
+                // When in English, show Israel flag to switch to Hebrew
+                flagIcon.className = 'flag-icon flag-israel';
+                langText.textContent = 'עברית';
+            }
+            
+            // Update search placeholder
+            document.getElementById('searchInput').placeholder = translations[currentLang]['search-placeholder'];
+            
+            // Update ingredient and instruction placeholders
+            updatePlaceholders();
+        }
+
+        function updatePlaceholders() {
+            document.querySelectorAll('.ingredient-item input:first-child').forEach(input => {
+                input.placeholder = translations[currentLang]['ingredient-placeholder'];
+            });
+            document.querySelectorAll('.ingredient-item input:nth-child(2)').forEach(input => {
+                input.placeholder = translations[currentLang]['amount-placeholder'];
+            });
+            document.querySelectorAll('.instruction-item input').forEach((input, index) => {
+                input.placeholder = `${translations[currentLang]['step-placeholder']} ${index + 1}...`;
+            });
+        }
+
+        // Recipe management functions
+        function addIngredient() {
+            const container = document.getElementById('ingredientsContainer');
+            const ingredientItem = document.createElement('div');
+            ingredientItem.className = 'ingredient-item';
+            ingredientItem.innerHTML = `
+                <input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+                <input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+                <button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+            `;
+            container.appendChild(ingredientItem);
+        }
+
+        function removeIngredient(button) {
+            const container = document.getElementById('ingredientsContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        function addInstruction() {
+            const container = document.getElementById('instructionsContainer');
+            const instructionItem = document.createElement('div');
+            instructionItem.className = 'instruction-item';
+            const stepNumber = container.children.length + 1;
+            instructionItem.innerHTML = `
+                <input type="text" placeholder="${translations[currentLang]['step-placeholder']} ${stepNumber}..." required>
+                <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+            `;
+            container.appendChild(instructionItem);
+        }
+
+        function removeInstruction(button) {
+            const container = document.getElementById('instructionsContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+                updateInstructionPlaceholders();
+            }
+        }
+
+        function updateInstructionPlaceholders() {
+            document.querySelectorAll('.instruction-item input').forEach((input, index) => {
+                input.placeholder = `${translations[currentLang]['step-placeholder']} ${index + 1}...`;
+            });
+        }
+
+        function handleFileSelect(input) {
+            const label = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('File size must be less than 5MB', 'error');
+                    input.value = '';
+                    label.textContent = '📷 Choose Image (Max 5MB)';
+                    label.classList.remove('has-file');
+                    return;
+                }
+
+                // Validate file type
+                if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+                    showNotification('Only JPG and PNG files are allowed', 'error');
+                    input.value = '';
+                    label.textContent = '📷 Choose Image (Max 5MB)';
+                    label.classList.remove('has-file');
+                    return;
+                }
+
+                label.textContent = `✅ ${file.name}`;
+                label.classList.add('has-file');
+            }
+        }
+
+        // Form submission
+        document.getElementById('recipeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            showLoading(true);
+            
+            // Simulate API delay
+            setTimeout(() => {
+                const title = document.getElementById('recipeTitle').value;
+                const imageFile = document.getElementById('recipeImage').files[0];
+                
+                // Collect ingredients
+                const ingredients = [];
+                document.querySelectorAll('.ingredient-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input');
+                    if (inputs[0].value && inputs[1].value) {
+                        ingredients.push({
+                            name: inputs[0].value,
+                            amount: inputs[1].value
+                        });
+                    }
+                });
+
+                // Collect instructions
+                const instructions = [];
+                document.querySelectorAll('.instruction-item input').forEach(input => {
+                    if (input.value) {
+                        instructions.push(input.value);
+                    }
+                });
+
+                // Validate form
+                if (!title || ingredients.length === 0 || instructions.length === 0) {
+                    showNotification('Please fill in all required fields', 'error');
+                    showLoading(false);
+                    return;
+                }
+
+                // Create recipe object
+                const recipe = {
+                    id: recipeIdCounter++,
+                    title: title,
+                    ingredients: ingredients,
+                    instructions: instructions,
+                    image_url: imageFile ? URL.createObjectURL(imageFile) : null,
+                    created_at: new Date().toISOString()
+                };
+
+                // Add to recipes array
+                recipes.push(recipe);
+                
+                // Clear form
+                document.getElementById('recipeForm').reset();
+                document.getElementById('file-label').textContent = '📷 Choose Image (Max 5MB)';
+                document.getElementById('file-label').classList.remove('has-file');
+                
+                // Reset to minimum ingredients/instructions
+                resetForm();
+                
+                // Refresh recipes display
+                displayRecipes();
+                
+                showLoading(false);
+                showNotification('Recipe added successfully!', 'success');
+            }, 1500);
+        });
+
+        function resetForm() {
+            // Reset ingredients to one item
+            const ingredientsContainer = document.getElementById('ingredientsContainer');
+            ingredientsContainer.innerHTML = `
+                <div class="ingredient-item">
+                    <input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+                    <input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+                    <button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+                </div>
+            `;
+
+            // Reset instructions to one item
+            const instructionsContainer = document.getElementById('instructionsContainer');
+            instructionsContainer.innerHTML = `
+                <div class="instruction-item">
+                    <input type="text" placeholder="${translations[currentLang]['step-placeholder']} 1..." required>
+                    <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+                </div>
+            `;
+        }
+
+        function displayRecipes() {
+            const grid = document.getElementById('recipesGrid');
+            
+            if (recipes.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🍳</div>
+                        <h3 id="empty-title">${translations[currentLang]['empty-title']}</h3>
+                        <p id="empty-subtitle">${translations[currentLang]['empty-subtitle']}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = recipes.map(recipe => `
+                <div class="recipe-card" onclick="openRecipeModal(${recipe.id})">
+                    ${recipe.image_url ? 
+                        `<img src="${recipe.image_url}" alt="${recipe.title}" class="recipe-image">` :
+                        `<div class="recipe-image">No Image</div>`
+                    }
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">${recipe.title}</h3>
+                        <p class="recipe-meta">${new Date(recipe.created_at).toLocaleDateString()}</p>
+                        <p class="recipe-ingredients-preview">${recipe.ingredients.length} ingredients • ${recipe.instructions.length} steps</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function searchRecipes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredRecipes = recipes.filter(recipe => 
+                recipe.title.toLowerCase().includes(searchTerm) ||
+                recipe.ingredients.some(ing => ing.name.toLowerCase().includes(searchTerm))
+            );
+            
+            const grid = document.getElementById('recipesGrid');
+            if (filteredRecipes.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h3>No recipes found</h3>
+                        <p>Try a different search term</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredRecipes.map(recipe => `
+                <div class="recipe-card" onclick="openRecipeModal(${recipe.id})">
+                    ${recipe.image_url ? 
+                        `<img src="${recipe.image_url}" alt="${recipe.title}" class="recipe-image">` :
+                        `<div class="recipe-image">No Image</div>`
+                    }
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">${recipe.title}</h3>
+                        <p class="recipe-meta">${new Date(recipe.created_at).toLocaleDateString()}</p>
+                        <p class="recipe-ingredients-preview">${recipe.ingredients.length} ingredients • ${recipe.instructions.length} steps</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openRecipeModal(recipeId) {
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            document.getElementById('modalRecipeTitle').textContent = recipe.title;
+            document.getElementById('modalRecipeDate').textContent = new Date(recipe.created_at).toLocaleDateString();
+            
+            const modalImage = document.getElementById('modalRecipeImage');
+            if (recipe.image_url) {
+                modalImage.src = recipe.image_url;
+                modalImage.alt = recipe.title;
+                modalImage.style.display = 'block';
+            } else {
+                modalImage.style.display = 'none';
+            }
+
+            const ingredientsList = document.getElementById('modalIngredientsList');
+            ingredientsList.innerHTML = recipe.ingredients.map(ing => 
+                `<li><strong>${ing.name}</strong> <span>${ing.amount}</span></li>`
+            ).join('');
+
+            const instructionsList = document.getElementById('modalInstructionsList');
+            instructionsList.innerHTML = recipe.instructions.map(inst => 
+                `<li>${inst}</li>`
+            ).join('');
+
+            document.getElementById('recipeModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('recipeModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize with some sample recipes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add sample recipes
+            recipes = [
+                {
+                    id: recipeIdCounter++,
+                    title: "Classic Chocolate Cake",
+                    ingredients: [
+                        { name: "All-purpose flour", amount: "2 cups" },
+                        { name: "Sugar", amount: "1.5 cups" },
+                        { name: "Cocoa powder", amount: "3/4 cup" },
+                        { name: "Eggs", amount: "2 large" },
+                        { name: "Milk", amount: "1 cup" },
+                        { name: "Vanilla extract", amount: "1 tsp" }
+                    ],
+                    instructions: [
+                        "Preheat oven to 350°F (175°C)",
+                        "Mix dry ingredients in a large bowl",
+                        "In another bowl, whisk together eggs, milk, and vanilla",
+                        "Combine wet and dry ingredients until smooth",
+                        "Pour into greased 9-inch cake pan",
+                        "Bake for 30-35 minutes until toothpick comes out clean",
+                        "Cool completely before frosting"
+                    ],
+                    image_url: null,
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: recipeIdCounter++,
+                    title: "Mediterranean Pasta Salad",
+                    ingredients: [
+                        { name: "Pasta", amount: "12 oz" },
+                        { name: "Cherry tomatoes", amount: "2 cups" },
+                        { name: "Feta cheese", amount: "1 cup" },
+                        { name: "Olive oil", amount: "1/4 cup" },
+                        { name: "Fresh basil", amount: "1/2 cup" },
+                        { name: "Red onion", amount: "1 small" }
+                    ],
+                    instructions: [
+                        "Cook pasta according to package directions",
+                        "Drain and rinse with cold water",
+                        "Halve cherry tomatoes and dice red onion",
+                        "Mix pasta with vegetables in large bowl",
+                        "Add crumbled feta and torn basil leaves",
+                        "Drizzle with olive oil and toss gently",
+                        "Chill for at least 1 hour before serving"
+                    ],
+                    image_url: null,
+                    created_at: new Date().toISOString()
+                }
+            ];
+            
+            displayRecipes();
+        });
+    </script>
+</body>
+</html>
