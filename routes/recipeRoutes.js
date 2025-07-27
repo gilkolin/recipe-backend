@@ -120,11 +120,6 @@ router.post('/', upload.single('image'), async (req, res) => {
         });
         console.log('=== DEBUGGING END ===');
 
-        // Your existing code continues here...
-        const { title, ingredients, instructions } = req.body;
-        // ... rest of your route
-		
-		
         const { title, ingredients, instructions } = req.body;
 
         // Validation

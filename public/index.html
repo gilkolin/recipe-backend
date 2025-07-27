@@ -660,6 +660,22 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
+		
+		.recipe-no-image {
+			display: flex !important;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+			color: #6c757d;
+			font-size: 16px;
+			font-weight: 600;
+		}
+
+		.recipe-no-image span {
+			font-size: 2em;
+			margin-bottom: 8px;
+		}
     </style>
 </head>
 <body>
@@ -987,23 +1003,30 @@
 		}
 
         function createRecipeCard(recipe) {
-            const card = document.createElement('div');
-            card.className = 'recipe-card';
-            card.setAttribute('onclick', `openModal('${recipe._id}')`);
+			const card = document.createElement('div');
+			card.className = 'recipe-card';
+			card.setAttribute('onclick', `openModal('${recipe._id}')`);
 
-            const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
-            const date = new Date(recipe.createdAt).toLocaleDateString();
+			const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
+			const date = new Date(recipe.createdAt).toLocaleDateString();
 
-            card.innerHTML = `
-                <img src="${recipe.imageUrl || 'https://via.placeholder.com/320x200?text=No+Image'}" alt="${recipe.title}" class="recipe-image">
-                <div class="recipe-content">
-                    <div class="recipe-title">${recipe.title}</div>
-                    <div class="recipe-meta">Shared on ${date}</div>
-                    <div class="recipe-ingredients-preview">${ingredientNames}</div>
-                </div>
-            `;
-            return card;
-        }
+			const imageHtml = recipe.imageUrl 
+				? `<img src="${recipe.imageUrl}" alt="${recipe.title}" class="recipe-image">`
+				: `<div class="recipe-image recipe-no-image">
+					 <span>📷</span>
+					 <div>No Image</div>
+				   </div>`;
+
+			card.innerHTML = `
+				${imageHtml}
+				<div class="recipe-content">
+					<div class="recipe-title">${recipe.title}</div>
+					<div class="recipe-meta">Shared on ${date}</div>
+					<div class="recipe-ingredients-preview">${ingredientNames}</div>
+				</div>
+			`;
+			return card;
+		}
         
         function openModal(recipeId) {
             const recipe = allRecipes.find(r => r._id === recipeId);
@@ -1124,4 +1147,4 @@
 
     </script>
 </body>
-</html>
+</html>`
