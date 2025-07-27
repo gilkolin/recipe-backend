@@ -5,22 +5,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const recipeRoutes = require('./routes/recipeRoutes');
 const path = require('path');
-const cloudinary = require('cloudinary').v2; // ADDED
-const multer = require('multer'); // ADDED
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// ==========================================================
-// Cloudinary Configuration (ADDED)
-// ==========================================================
-cloudinary.config({
- cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
- api_key: process.env.CLOUDINARY_API_KEY,
- api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 app.use('/api/recipes', recipeRoutes);
 
 // ==========================================================

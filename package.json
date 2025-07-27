@@ -16,8 +16,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "mongoose": "^8.16.4",
-    "multer": "^2.0.2",
-	"multer-cloudinary-storage": "^2.2.1"
+    "multer": "^2.0.2"
   },
   "engines": {
     "node": ">=18.0.0"
