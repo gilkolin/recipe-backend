@@ -10,6 +10,10 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/recipes', recipeRoutes);
 
+app.get('/', (req, res) => {
+  res.send('Hello from your Render server!');
+});
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB connected');
