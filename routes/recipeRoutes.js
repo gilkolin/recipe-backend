@@ -150,8 +150,11 @@ router.post('/', upload.single('image'), async (req, res) => {
         });
 
         const savedRecipe = await newRecipe.save();
-        
-        console.log('Recipe saved successfully:', savedRecipe._id);
+		console.log('Recipe saved successfully:', savedRecipe._id);
+
+		// Add this verification:
+		const verification = await Recipe.findById(savedRecipe._id);
+		console.log('Verification - recipe exists in DB:', !!verification);
         
         res.status(201).json({
             message: 'Recipe saved successfully!',
