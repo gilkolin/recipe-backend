@@ -670,7 +670,7 @@
         </button>
 
         <div class="header">
-            <h1 id="site-title">Test</h1>
+            <h1 id="site-title">Recipe Share</h1>
             <p id="site-subtitle">Share Your Culinary Creations with the World</p>
         </div>
 
@@ -766,16 +766,347 @@
     </div>
 
     <script>
-    // Check if the form element exists
-    const recipeForm = document.getElementById('recipeForm');
-    console.log("Form element found:", recipeForm);
+        const translations = {
+            en: {
+                'site-title': 'Recipe Share',
+                'site-subtitle': 'Share Your Culinary Creations with the World',
+                'form-title': 'Add New Recipe',
+                'title-label': 'Recipe Title',
+                'ingredients-label': 'Ingredients',
+                'instructions-label': 'Instructions',
+                'image-label': 'Recipe Image',
+                'submit-btn': 'Share Recipe',
+                'recipes-title': 'Shared Recipes',
+                'add-ingredient-btn': '+ Add Ingredient',
+                'add-instruction-btn': '+ Add Step',
+                'file-label': '📷 Choose Image (Max 5MB)',
+                'empty-title': 'No recipes yet!',
+                'empty-subtitle': 'Be the first to share a delicious recipe',
+                'modal-ingredients-title': 'Ingredients',
+                'modal-instructions-title': 'Instructions',
+                'search-placeholder': 'Search recipes...',
+                'ingredient-placeholder': 'Ingredient name...',
+                'amount-placeholder': 'Amount...',
+                'step-placeholder': 'Step'
+            },
+            he: {
+                'site-title': 'שיתוף מתכונים',
+                'site-subtitle': 'שתפו את היצירות הקולינריות שלכם עם העולם',
+                'form-title': 'הוסף מתכון חדש',
+                'title-label': 'כותרת המתכון',
+                'ingredients-label': 'מצרכים',
+                'instructions-label': 'הוראות הכנה',
+                'image-label': 'תמונת המתכון',
+                'submit-btn': 'שתף מתכון',
+                'recipes-title': 'מתכונים משותפים',
+                'add-ingredient-btn': '+ הוסף מצרך',
+                'add-instruction-btn': '+ הוסף שלב',
+                'file-label': '📷 בחר תמונה (מקסימום 5MB)',
+                'empty-title': 'אין מתכונים עדיין!',
+                'empty-subtitle': 'היו הראשונים לשתף מתכון טעים',
+                'modal-ingredients-title': 'מצרכים',
+                'modal-instructions-title': 'הוראות הכנה',
+                'search-placeholder': 'חפש מתכונים...',
+                'ingredient-placeholder': 'שם המצרך...',
+                'amount-placeholder': 'כמות...',
+                'step-placeholder': 'שלב'
+            }
+        };
 
-    if (recipeForm) {
-        recipeForm.addEventListener('submit', function(e) {
+        let currentLang = 'en';
+        let allRecipes = []; // Will store recipes fetched from the server
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'he' : 'en';
+            document.documentElement.setAttribute('lang', currentLang);
+            document.documentElement.setAttribute('dir', currentLang === 'he' ? 'rtl' : 'ltr');
+            updateTranslations();
+        }
+
+        function updateTranslations() {
+            Object.keys(translations[currentLang]).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.tagName === 'INPUT' && element.type === 'text') {
+                        element.placeholder = translations[currentLang][key];
+                    } else if (element.tagName === 'BUTTON') {
+                        element.textContent = translations[currentLang][key];
+                    } else {
+                        element.textContent = translations[currentLang][key];
+                    }
+                }
+            });
+
+            const flagIcon = document.getElementById('flag-icon');
+            const langText = document.getElementById('lang-toggle-text');
+            if (currentLang === 'he') {
+                flagIcon.className = 'flag-icon flag-usa';
+                langText.textContent = 'English';
+            } else {
+                flagIcon.className = 'flag-icon flag-israel';
+                langText.textContent = 'עברית';
+            }
+            document.getElementById('searchInput').placeholder = translations[currentLang]['search-placeholder'];
+            updatePlaceholders();
+        }
+
+        function updatePlaceholders() {
+            document.querySelectorAll('.ingredient-item input:first-child').forEach(input => {
+                input.placeholder = translations[currentLang]['ingredient-placeholder'];
+            });
+            document.querySelectorAll('.ingredient-item input:nth-child(2)').forEach(input => {
+                input.placeholder = translations[currentLang]['amount-placeholder'];
+            });
+            document.querySelectorAll('.instruction-item input').forEach((input, index) => {
+                input.placeholder = `${translations[currentLang]['step-placeholder']} ${index + 1}...`;
+            });
+        }
+        
+        // =================================================================
+        // Recipe Management Functions (UPDATED FOR API CALLS)
+        // =================================================================
+
+        function addIngredient() {
+            const container = document.getElementById('ingredientsContainer');
+            const ingredientItem = document.createElement('div');
+            ingredientItem.className = 'ingredient-item';
+            ingredientItem.innerHTML = `
+                <input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+                <input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+                <button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+            `;
+            container.appendChild(ingredientItem);
+        }
+
+        function removeIngredient(button) {
+            const container = document.getElementById('ingredientsContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            }
+        }
+
+        function addInstruction() {
+            const container = document.getElementById('instructionsContainer');
+            const instructionItem = document.createElement('div');
+            instructionItem.className = 'instruction-item';
+            const stepNumber = container.children.length + 1;
+            instructionItem.innerHTML = `
+                <input type="text" placeholder="${translations[currentLang]['step-placeholder']} ${stepNumber}..." required>
+                <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+            `;
+            container.appendChild(instructionItem);
+            updateInstructionPlaceholders();
+        }
+
+        function removeInstruction(button) {
+            const container = document.getElementById('instructionsContainer');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+                updateInstructionPlaceholders();
+            }
+        }
+
+        function updateInstructionPlaceholders() {
+            document.querySelectorAll('.instruction-item input').forEach((input, index) => {
+                input.placeholder = `${translations[currentLang]['step-placeholder']} ${index + 1}...`;
+            });
+        }
+
+        function handleFileSelect(input) {
+            const label = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('File size must be less than 5MB', 'error');
+                    input.value = '';
+                    label.textContent = translations[currentLang]['file-label'];
+                    label.classList.remove('has-file');
+                    return;
+                }
+
+                if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+                    showNotification('Only JPG and PNG files are allowed', 'error');
+                    input.value = '';
+                    label.textContent = translations[currentLang]['file-label'];
+                    label.classList.remove('has-file');
+                    return;
+                }
+
+                label.textContent = `✅ ${file.name}`;
+                label.classList.add('has-file');
+            }
+        }
+
+        async function fetchAndDisplayRecipes() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/recipes');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recipes');
+                }
+                allRecipes = await response.json();
+                renderRecipes(allRecipes);
+            } catch (error) {
+                console.error('Error fetching recipes:', error);
+                showNotification('Failed to load recipes. Please try again later.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderRecipes(recipesToRender) {
+            const recipesGrid = document.getElementById('recipesGrid');
+            const emptyState = document.getElementById('emptyState');
+            recipesGrid.innerHTML = '';
+            
+            if (recipesToRender.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                recipesToRender.forEach(recipe => {
+                    const card = createRecipeCard(recipe);
+                    recipesGrid.appendChild(card);
+                });
+            }
+        }
+
+        function createRecipeCard(recipe) {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.setAttribute('onclick', `openModal('${recipe._id}')`);
+
+            const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
+            const date = new Date(recipe.createdAt).toLocaleDateString();
+
+            card.innerHTML = `
+                <img src="${recipe.imageUrl || 'https://via.placeholder.com/320x200?text=No+Image'}" alt="${recipe.title}" class="recipe-image">
+                <div class="recipe-content">
+                    <div class="recipe-title">${recipe.title}</div>
+                    <div class="recipe-meta">Shared on ${date}</div>
+                    <div class="recipe-ingredients-preview">${ingredientNames}</div>
+                </div>
+            `;
+            return card;
+        }
+        
+        function openModal(recipeId) {
+            const recipe = allRecipes.find(r => r._id === recipeId);
+            if (!recipe) return;
+
+            document.getElementById('modalRecipeTitle').textContent = recipe.title;
+            document.getElementById('modalRecipeDate').textContent = `Shared on ${new Date(recipe.createdAt).toLocaleDateString()}`;
+
+            const modalImage = document.getElementById('modalRecipeImage');
+            if (recipe.imageUrl) {
+                modalImage.src = recipe.imageUrl;
+                modalImage.style.display = 'block';
+            } else {
+                modalImage.style.display = 'none';
+            }
+
+            const ingredientsList = document.getElementById('modalIngredientsList');
+            ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li><span>${ing.name}</span><span>${ing.amount}</span></li>`).join('');
+
+            const instructionsList = document.getElementById('modalInstructionsList');
+            instructionsList.innerHTML = recipe.instructions.map(step => `<li>${step}</li>`).join('');
+
+            document.getElementById('recipeModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
+        function searchRecipes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredRecipes = allRecipes.filter(recipe => {
+                const titleMatch = recipe.title.toLowerCase().includes(searchTerm);
+                const ingredientMatch = recipe.ingredients.some(ing => ing.name.toLowerCase().includes(searchTerm));
+                return titleMatch || ingredientMatch;
+            });
+            renderRecipes(filteredRecipes);
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            console.log("Form submission button clicked! This works!");
+			console.log("Form submission button clicked!");
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('recipeTitle').value);
+            formData.append('recipeImage', document.getElementById('recipeImage').files[0]);
+
+            // Collect ingredients and instructions and serialize as JSON
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value) {
+                    ingredients.push({ name: inputs[0].value, amount: inputs[1].value });
+                }
+            });
+            formData.append('ingredients', JSON.stringify(ingredients));
+
+            const instructions = [];
+            document.querySelectorAll('.instruction-item input').forEach(input => {
+                if (input.value) {
+                    instructions.push(input.value);
+                }
+            });
+            formData.append('instructions', JSON.stringify(instructions));
+            
+            try {
+                const response = await fetch('/api/recipes', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to save recipe');
+                }
+
+                showNotification('Recipe shared successfully!');
+                document.getElementById('recipeForm').reset();
+                document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
+                document.getElementById('file-label').classList.remove('has-file');
+
+                // Re-fetch and display recipes to show the new one
+                await fetchAndDisplayRecipes();
+
+            } catch (error) {
+                console.error('Error sharing recipe:', error);
+                showNotification(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
         });
-    }
-</script>
+
+        // =================================================================
+        // Helper Functions (unchanged from your original code)
+        // =================================================================
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Run on page load
+        window.addEventListener('load', () => {
+            updateTranslations();
+            fetchAndDisplayRecipes();
+        });
+
+    </script>
 </body>
 </html>
