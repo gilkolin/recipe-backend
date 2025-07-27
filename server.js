@@ -11,7 +11,7 @@ app.use(express.json());
 app.use('/api/recipes', recipeRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello from your Render server!');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 mongoose.connect(process.env.MONGODB_URI)
