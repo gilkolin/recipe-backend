@@ -5,47 +5,47 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const recipeRoutes = require('./routes/recipeRoutes');
 const path = require('path');
+const cloudinary = require('cloudinary').v2; // ADDED
+const multer = require('multer'); // ADDED
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ==========================================================
+// Cloudinary Configuration (ADDED)
+// ==========================================================
+cloudinary.config({
+ cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+ api_key: process.env.CLOUDINARY_API_KEY,
+ api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 app.use('/api/recipes', recipeRoutes);
 
+// ==========================================================
+// Serve static files from the 'public' directory (CHANGED)
+// ==========================================================
+app.use(express.static(path.join(__dirname, 'public')));
 
-
-// Define the full path to your index.html file
-const indexPath = path.join(__dirname, 'public', 'index.html');
-
-// Log the path to verify it's correct
-console.log('Attempting to serve HTML from path:', indexPath);
-
-app.get('/', (req, res) => {
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      // This callback catches errors specifically from sendFile, e.g., file not found
-      console.error('Error sending index.html:', err);
-      // You can send a more user-friendly error page here if needed
-      res.status(500).send('Internal Server Error: Could not load page.');
-    }
-  });
+// ==========================================================
+// Catch-all route to serve index.html for SPAs (CHANGED)
+// ==========================================================
+app.get('*', (req, res) => {
+ res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Optional: Add a general error-handling middleware for any unhandled errors
-// This should be placed after all your routes and other middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled server error:', err.stack); // Log the full stack trace
-  res.status(500).send('Something unexpected broke!');
+  console.error('Unhandled server error:', err.stack);
+  res.status(500).send('Something unexpected broke!');
 });
 
-
-
-
-
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
-        console.log('MongoDB connected');
-        app.listen(process.env.PORT, () => {
-            console.log(`Server running on port ${process.env.PORT}`);
-        });
-    })
-    .catch(err => console.error('DB connection error:', err));
+    .then(() => {
+        console.log('MongoDB connected');
+        app.listen(process.env.PORT, () => {
+            console.log(`Server running on port ${process.env.PORT}`);
+        });
+    })
+    .catch(err => console.error('DB connection error:', err));

@@ -1,35 +1,81 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
 const router = express.Router();
-const Recipe = require('../models/Recipe'); // adjust path if needed
-const upload = require('../utils/multer');  // ✅ this is your multer file
-const cloudinary = require('../utils/cloudinary'); // your cloudinary config
 
-// ✅ Create new recipe with image upload
-router.post('/', upload.single('image'), async (req, res) => {
-    try {
-        console.log('req.file:', req.file);     // ✅ Now it's valid
-        console.log('req.body:', req.body);     // ✅ Now it's valid
+// ==========================================================
+// Setup Multer for Cloudinary Image Upload
+// ==========================================================
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'recipe-share-app',
+        format: async (req, file) => 'png',
+        public_id: (req, file) => file.originalname + '-' + Date.now(),
+    },
+});
+const upload = multer({ storage: storage });
 
-        const result = await cloudinary.uploader.upload(req.file.path);
-        const recipe = new Recipe({
-            ...req.body,
-            imageUrl: result.secure_url
-        });
-        await recipe.save();
-        res.status(201).json(recipe);
-    } catch (err) {
-        console.error('Upload or save error:', err);  // Better debug message
-        res.status(500).json({ error: err.message });
+// ==========================================================
+// Mongoose Schema & Model
+// ==========================================================
+const recipeSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    ingredients: [{
+        name: String,
+        amount: String
+    }],
+    instructions: [String],
+    imageUrl: String,
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 });
-module.exports = router;
 
+const Recipe = mongoose.model('Recipe', recipeSchema);
 
-router.get('/recipes', async (req, res) => {
-  try {
-    const recipes = await Recipe.find().sort({ createdAt: -1 });
-    res.json(recipes);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// ==========================================================
+// API Routes
+// ==========================================================
+
+// GET all recipes
+router.get('/', async (req, res) => {
+    try {
+        const recipes = await Recipe.find().sort({ createdAt: -1 });
+        res.json(recipes);
+    } catch (error) {
+        console.error('Error fetching recipes:', error);
+        res.status(500).json({ message: 'Failed to fetch recipes' });
+    }
 });
+
+// POST a new recipe (with image upload)
+router.post('/', upload.single('recipeImage'), async (req, res) => {
+    try {
+        const { title, ingredients, instructions } = req.body;
+        const imageUrl = req.file ? req.file.path : null;
+
+        const newRecipe = new Recipe({
+            title,
+            ingredients: JSON.parse(ingredients),
+            instructions: JSON.parse(instructions),
+            imageUrl
+        });
+
+        await newRecipe.save();
+        res.status(201).json({ message: 'Recipe saved successfully!', newRecipe });
+    } catch (error) {
+        console.error('Error saving recipe:', error);
+        res.status(500).json({ message: 'Failed to save recipe', error: error.message });
+    }
+});
+
+module.exports = router;

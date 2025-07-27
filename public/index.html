@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Share - Share Your Culinary Creations</title>
     <style>
+        /* ... Your existing CSS styles go here, unchanged ... */
         * {
             margin: 0;
             padding: 0;
@@ -674,7 +675,6 @@
         </div>
 
         <div class="main-content">
-            <!-- Recipe Submission Form -->
             <div class="recipe-form">
                 <h2 id="form-title">Add New Recipe</h2>
                 <form id="recipeForm">
@@ -720,7 +720,6 @@
                 </form>
             </div>
 
-            <!-- Recipes Display Section -->
             <div class="recipes-section">
                 <h2 id="recipes-title">Shared Recipes</h2>
                 
@@ -729,7 +728,7 @@
                 </div>
 
                 <div class="recipes-grid" id="recipesGrid">
-                    <div class="empty-state">
+                    <div class="empty-state" id="emptyState">
                         <div class="empty-state-icon">🍳</div>
                         <h3 id="empty-title">No recipes yet!</h3>
                         <p id="empty-subtitle">Be the first to share a delicious recipe</p>
@@ -739,7 +738,6 @@
         </div>
     </div>
 
-    <!-- Recipe Modal -->
     <div id="recipeModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -761,16 +759,13 @@
         </div>
     </div>
 
-    <!-- Notification -->
     <div id="notification" class="notification"></div>
 
-    <!-- Loading Spinner -->
     <div id="loading" class="loading">
         <div class="spinner"></div>
     </div>
 
     <script>
-        // Internationalization
         const translations = {
             en: {
                 'site-title': 'Recipe Share',
@@ -819,45 +814,39 @@
         };
 
         let currentLang = 'en';
-        let recipes = [];
-        let recipeIdCounter = 1;
+        let allRecipes = []; // Will store recipes fetched from the server
 
-        // Language toggle functionality
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'he' : 'en';
             document.documentElement.setAttribute('lang', currentLang);
             document.documentElement.setAttribute('dir', currentLang === 'he' ? 'rtl' : 'ltr');
-            
-            // Update all text content
+            updateTranslations();
+        }
+
+        function updateTranslations() {
             Object.keys(translations[currentLang]).forEach(key => {
                 const element = document.getElementById(key);
                 if (element) {
                     if (element.tagName === 'INPUT' && element.type === 'text') {
                         element.placeholder = translations[currentLang][key];
+                    } else if (element.tagName === 'BUTTON') {
+                        element.textContent = translations[currentLang][key];
                     } else {
                         element.textContent = translations[currentLang][key];
                     }
                 }
             });
 
-            // Update language toggle button and flag
             const flagIcon = document.getElementById('flag-icon');
             const langText = document.getElementById('lang-toggle-text');
-            
             if (currentLang === 'he') {
-                // When in Hebrew, show USA flag to switch to English
                 flagIcon.className = 'flag-icon flag-usa';
                 langText.textContent = 'English';
             } else {
-                // When in English, show Israel flag to switch to Hebrew
                 flagIcon.className = 'flag-icon flag-israel';
                 langText.textContent = 'עברית';
             }
-            
-            // Update search placeholder
             document.getElementById('searchInput').placeholder = translations[currentLang]['search-placeholder'];
-            
-            // Update ingredient and instruction placeholders
             updatePlaceholders();
         }
 
@@ -872,8 +861,11 @@
                 input.placeholder = `${translations[currentLang]['step-placeholder']} ${index + 1}...`;
             });
         }
+        
+        // =================================================================
+        // Recipe Management Functions (UPDATED FOR API CALLS)
+        // =================================================================
 
-        // Recipe management functions
         function addIngredient() {
             const container = document.getElementById('ingredientsContainer');
             const ingredientItem = document.createElement('div');
@@ -903,6 +895,7 @@
                 <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
             `;
             container.appendChild(instructionItem);
+            updateInstructionPlaceholders();
         }
 
         function removeInstruction(button) {
@@ -924,20 +917,18 @@
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 
-                // Validate file size (5MB limit)
                 if (file.size > 5 * 1024 * 1024) {
                     showNotification('File size must be less than 5MB', 'error');
                     input.value = '';
-                    label.textContent = '📷 Choose Image (Max 5MB)';
+                    label.textContent = translations[currentLang]['file-label'];
                     label.classList.remove('has-file');
                     return;
                 }
 
-                // Validate file type
                 if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
                     showNotification('Only JPG and PNG files are allowed', 'error');
                     input.value = '';
-                    label.textContent = '📷 Choose Image (Max 5MB)';
+                    label.textContent = translations[currentLang]['file-label'];
                     label.classList.remove('has-file');
                     return;
                 }
@@ -947,182 +938,78 @@
             }
         }
 
-        // Form submission
-        document.getElementById('recipeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
+        async function fetchAndDisplayRecipes() {
             showLoading(true);
-            
-            // Simulate API delay
-            setTimeout(() => {
-                const title = document.getElementById('recipeTitle').value;
-                const imageFile = document.getElementById('recipeImage').files[0];
-                
-                // Collect ingredients
-                const ingredients = [];
-                document.querySelectorAll('.ingredient-item').forEach(item => {
-                    const inputs = item.querySelectorAll('input');
-                    if (inputs[0].value && inputs[1].value) {
-                        ingredients.push({
-                            name: inputs[0].value,
-                            amount: inputs[1].value
-                        });
-                    }
-                });
-
-                // Collect instructions
-                const instructions = [];
-                document.querySelectorAll('.instruction-item input').forEach(input => {
-                    if (input.value) {
-                        instructions.push(input.value);
-                    }
-                });
-
-                // Validate form
-                if (!title || ingredients.length === 0 || instructions.length === 0) {
-                    showNotification('Please fill in all required fields', 'error');
-                    showLoading(false);
-                    return;
+            try {
+                const response = await fetch('/api/recipes');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recipes');
                 }
-
-                // Create recipe object
-                const recipe = {
-                    id: recipeIdCounter++,
-                    title: title,
-                    ingredients: ingredients,
-                    instructions: instructions,
-                    image_url: imageFile ? URL.createObjectURL(imageFile) : null,
-                    created_at: new Date().toISOString()
-                };
-
-                // Add to recipes array
-                recipes.push(recipe);
-                
-                // Clear form
-                document.getElementById('recipeForm').reset();
-                document.getElementById('file-label').textContent = '📷 Choose Image (Max 5MB)';
-                document.getElementById('file-label').classList.remove('has-file');
-                
-                // Reset to minimum ingredients/instructions
-                resetForm();
-                
-                // Refresh recipes display
-                displayRecipes();
-                
+                allRecipes = await response.json();
+                renderRecipes(allRecipes);
+            } catch (error) {
+                console.error('Error fetching recipes:', error);
+                showNotification('Failed to load recipes. Please try again later.', 'error');
+            } finally {
                 showLoading(false);
-                showNotification('Recipe added successfully!', 'success');
-            }, 1500);
-        });
+            }
+        }
 
-        function resetForm() {
-            // Reset ingredients to one item
-            const ingredientsContainer = document.getElementById('ingredientsContainer');
-            ingredientsContainer.innerHTML = `
-                <div class="ingredient-item">
-                    <input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
-                    <input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
-                    <button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+        function renderRecipes(recipesToRender) {
+            const recipesGrid = document.getElementById('recipesGrid');
+            const emptyState = document.getElementById('emptyState');
+            recipesGrid.innerHTML = '';
+            
+            if (recipesToRender.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                recipesToRender.forEach(recipe => {
+                    const card = createRecipeCard(recipe);
+                    recipesGrid.appendChild(card);
+                });
+            }
+        }
+
+        function createRecipeCard(recipe) {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.setAttribute('onclick', `openModal('${recipe._id}')`);
+
+            const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
+            const date = new Date(recipe.createdAt).toLocaleDateString();
+
+            card.innerHTML = `
+                <img src="${recipe.imageUrl || 'https://via.placeholder.com/320x200?text=No+Image'}" alt="${recipe.title}" class="recipe-image">
+                <div class="recipe-content">
+                    <div class="recipe-title">${recipe.title}</div>
+                    <div class="recipe-meta">Shared on ${date}</div>
+                    <div class="recipe-ingredients-preview">${ingredientNames}</div>
                 </div>
             `;
-
-            // Reset instructions to one item
-            const instructionsContainer = document.getElementById('instructionsContainer');
-            instructionsContainer.innerHTML = `
-                <div class="instruction-item">
-                    <input type="text" placeholder="${translations[currentLang]['step-placeholder']} 1..." required>
-                    <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
-                </div>
-            `;
+            return card;
         }
-
-        function displayRecipes() {
-            const grid = document.getElementById('recipesGrid');
-            
-            if (recipes.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🍳</div>
-                        <h3 id="empty-title">${translations[currentLang]['empty-title']}</h3>
-                        <p id="empty-subtitle">${translations[currentLang]['empty-subtitle']}</p>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = recipes.map(recipe => `
-                <div class="recipe-card" onclick="openRecipeModal(${recipe.id})">
-                    ${recipe.image_url ? 
-                        `<img src="${recipe.image_url}" alt="${recipe.title}" class="recipe-image">` :
-                        `<div class="recipe-image">No Image</div>`
-                    }
-                    <div class="recipe-content">
-                        <h3 class="recipe-title">${recipe.title}</h3>
-                        <p class="recipe-meta">${new Date(recipe.created_at).toLocaleDateString()}</p>
-                        <p class="recipe-ingredients-preview">${recipe.ingredients.length} ingredients • ${recipe.instructions.length} steps</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function searchRecipes() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredRecipes = recipes.filter(recipe => 
-                recipe.title.toLowerCase().includes(searchTerm) ||
-                recipe.ingredients.some(ing => ing.name.toLowerCase().includes(searchTerm))
-            );
-            
-            const grid = document.getElementById('recipesGrid');
-            if (filteredRecipes.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <h3>No recipes found</h3>
-                        <p>Try a different search term</p>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = filteredRecipes.map(recipe => `
-                <div class="recipe-card" onclick="openRecipeModal(${recipe.id})">
-                    ${recipe.image_url ? 
-                        `<img src="${recipe.image_url}" alt="${recipe.title}" class="recipe-image">` :
-                        `<div class="recipe-image">No Image</div>`
-                    }
-                    <div class="recipe-content">
-                        <h3 class="recipe-title">${recipe.title}</h3>
-                        <p class="recipe-meta">${new Date(recipe.created_at).toLocaleDateString()}</p>
-                        <p class="recipe-ingredients-preview">${recipe.ingredients.length} ingredients • ${recipe.instructions.length} steps</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function openRecipeModal(recipeId) {
-            const recipe = recipes.find(r => r.id === recipeId);
+        
+        function openModal(recipeId) {
+            const recipe = allRecipes.find(r => r._id === recipeId);
             if (!recipe) return;
 
             document.getElementById('modalRecipeTitle').textContent = recipe.title;
-            document.getElementById('modalRecipeDate').textContent = new Date(recipe.created_at).toLocaleDateString();
-            
+            document.getElementById('modalRecipeDate').textContent = `Shared on ${new Date(recipe.createdAt).toLocaleDateString()}`;
+
             const modalImage = document.getElementById('modalRecipeImage');
-            if (recipe.image_url) {
-                modalImage.src = recipe.image_url;
-                modalImage.alt = recipe.title;
+            if (recipe.imageUrl) {
+                modalImage.src = recipe.imageUrl;
                 modalImage.style.display = 'block';
             } else {
                 modalImage.style.display = 'none';
             }
 
             const ingredientsList = document.getElementById('modalIngredientsList');
-            ingredientsList.innerHTML = recipe.ingredients.map(ing => 
-                `<li><strong>${ing.name}</strong> <span>${ing.amount}</span></li>`
-            ).join('');
+            ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li><span>${ing.name}</span><span>${ing.amount}</span></li>`).join('');
 
             const instructionsList = document.getElementById('modalInstructionsList');
-            instructionsList.innerHTML = recipe.instructions.map(inst => 
-                `<li>${inst}</li>`
-            ).join('');
+            instructionsList.innerHTML = recipe.instructions.map(step => `<li>${step}</li>`).join('');
 
             document.getElementById('recipeModal').style.display = 'block';
         }
@@ -1131,12 +1018,79 @@
             document.getElementById('recipeModal').style.display = 'none';
         }
 
+        function searchRecipes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredRecipes = allRecipes.filter(recipe => {
+                const titleMatch = recipe.title.toLowerCase().includes(searchTerm);
+                const ingredientMatch = recipe.ingredients.some(ing => ing.name.toLowerCase().includes(searchTerm));
+                return titleMatch || ingredientMatch;
+            });
+            renderRecipes(filteredRecipes);
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('recipeTitle').value);
+            formData.append('recipeImage', document.getElementById('recipeImage').files[0]);
+
+            // Collect ingredients and instructions and serialize as JSON
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value) {
+                    ingredients.push({ name: inputs[0].value, amount: inputs[1].value });
+                }
+            });
+            formData.append('ingredients', JSON.stringify(ingredients));
+
+            const instructions = [];
+            document.querySelectorAll('.instruction-item input').forEach(input => {
+                if (input.value) {
+                    instructions.push(input.value);
+                }
+            });
+            formData.append('instructions', JSON.stringify(instructions));
+            
+            try {
+                const response = await fetch('/api/recipes', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to save recipe');
+                }
+
+                showNotification('Recipe shared successfully!');
+                document.getElementById('recipeForm').reset();
+                document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
+                document.getElementById('file-label').classList.remove('has-file');
+
+                // Re-fetch and display recipes to show the new one
+                await fetchAndDisplayRecipes();
+
+            } catch (error) {
+                console.error('Error sharing recipe:', error);
+                showNotification(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // =================================================================
+        // Helper Functions (unchanged from your original code)
+        // =================================================================
+
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type}`;
             notification.style.display = 'block';
-            
+
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 3000);
@@ -1146,68 +1100,12 @@
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('recipeModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // Initialize with some sample recipes
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add sample recipes
-            recipes = [
-                {
-                    id: recipeIdCounter++,
-                    title: "Classic Chocolate Cake",
-                    ingredients: [
-                        { name: "All-purpose flour", amount: "2 cups" },
-                        { name: "Sugar", amount: "1.5 cups" },
-                        { name: "Cocoa powder", amount: "3/4 cup" },
-                        { name: "Eggs", amount: "2 large" },
-                        { name: "Milk", amount: "1 cup" },
-                        { name: "Vanilla extract", amount: "1 tsp" }
-                    ],
-                    instructions: [
-                        "Preheat oven to 350°F (175°C)",
-                        "Mix dry ingredients in a large bowl",
-                        "In another bowl, whisk together eggs, milk, and vanilla",
-                        "Combine wet and dry ingredients until smooth",
-                        "Pour into greased 9-inch cake pan",
-                        "Bake for 30-35 minutes until toothpick comes out clean",
-                        "Cool completely before frosting"
-                    ],
-                    image_url: null,
-                    created_at: new Date().toISOString()
-                },
-                {
-                    id: recipeIdCounter++,
-                    title: "Mediterranean Pasta Salad",
-                    ingredients: [
-                        { name: "Pasta", amount: "12 oz" },
-                        { name: "Cherry tomatoes", amount: "2 cups" },
-                        { name: "Feta cheese", amount: "1 cup" },
-                        { name: "Olive oil", amount: "1/4 cup" },
-                        { name: "Fresh basil", amount: "1/2 cup" },
-                        { name: "Red onion", amount: "1 small" }
-                    ],
-                    instructions: [
-                        "Cook pasta according to package directions",
-                        "Drain and rinse with cold water",
-                        "Halve cherry tomatoes and dice red onion",
-                        "Mix pasta with vegetables in large bowl",
-                        "Add crumbled feta and torn basil leaves",
-                        "Drizzle with olive oil and toss gently",
-                        "Chill for at least 1 hour before serving"
-                    ],
-                    image_url: null,
-                    created_at: new Date().toISOString()
-                }
-            ];
-            
-            displayRecipes();
+        // Run on page load
+        window.addEventListener('load', () => {
+            updateTranslations();
+            fetchAndDisplayRecipes();
         });
+
     </script>
 </body>
 </html>
