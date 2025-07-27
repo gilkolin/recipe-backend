@@ -1030,6 +1030,7 @@
 
         document.getElementById('recipeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+			console.log("Form submission button clicked!");
             showLoading(true);
 
             const formData = new FormData();
