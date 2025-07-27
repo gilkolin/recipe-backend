@@ -956,20 +956,35 @@
         }
 
         function renderRecipes(recipesToRender) {
-            const recipesGrid = document.getElementById('recipesGrid');
-            const emptyState = document.getElementById('emptyState');
-            recipesGrid.innerHTML = '';
-            
-            if (recipesToRender.length === 0) {
-                emptyState.style.display = 'block';
-            } else {
-                emptyState.style.display = 'none';
-                recipesToRender.forEach(recipe => {
-                    const card = createRecipeCard(recipe);
-                    recipesGrid.appendChild(card);
-                });
-            }
-        }
+			const recipesGrid = document.getElementById('recipesGrid');
+			
+			// Clear existing recipe cards but preserve the empty state element
+			recipesGrid.innerHTML = `
+				<div class="empty-state" id="emptyState" style="display: none;">
+					<div class="empty-state-icon">🍳</div>
+					<h3 id="empty-title">No recipes yet!</h3>
+					<p id="empty-subtitle">Be the first to share a delicious recipe</p>
+				</div>
+			`;
+			
+			const emptyState = document.getElementById('emptyState');
+			
+			if (recipesToRender.length === 0) {
+				emptyState.style.display = 'block';
+			} else {
+				emptyState.style.display = 'none';
+				recipesToRender.forEach(recipe => {
+					const card = createRecipeCard(recipe);
+					recipesGrid.appendChild(card);
+				});
+			}
+			
+			// Update translations for the empty state
+			if (currentLang === 'he') {
+				document.getElementById('empty-title').textContent = translations.he['empty-title'];
+				document.getElementById('empty-subtitle').textContent = translations.he['empty-subtitle'];
+			}
+		}
 
         function createRecipeCard(recipe) {
             const card = document.createElement('div');
