@@ -183,7 +183,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         console.log('Request body:', req.body);
         console.log('=== DEBUGGING END ===');
 
-        const { title, category, tags, ingredients, instructions } = req.body;
+        const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
         // Validation
         if (!title || !category || !ingredients || !instructions) {
@@ -241,16 +241,18 @@ router.post('/', upload.single('image'), async (req, res) => {
         }
 
         const newRecipe = new Recipe({
-            title: title.trim(),
-            category: category.toLowerCase(),
-            tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
-            ingredients: parsedIngredients.map(ing => ({
-                name: ing.name?.trim(),
-                amount: ing.amount?.trim()
-            })),
-            instructions: parsedInstructions.map(inst => inst.trim()),
-            imageUrl
-        });
+			title: title.trim(),
+			category: category.toLowerCase(),
+			cookingTime: Number(cookingTime),
+			difficulty: difficulty.toLowerCase(),
+			tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
+			ingredients: parsedIngredients.map(ing => ({
+				name: ing.name?.trim(),
+				amount: ing.amount?.trim()
+			})),
+			instructions: parsedInstructions.map(inst => inst.trim()),
+			imageUrl
+		});
 
         const savedRecipe = await newRecipe.save();
         console.log('Recipe saved successfully:', savedRecipe._id);
