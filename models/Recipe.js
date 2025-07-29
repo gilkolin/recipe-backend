@@ -36,4 +36,4 @@ recipeSchema.index({ averageRating: -1 });
 recipeSchema.index({ cookingTime: 1 });
 recipeSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model('Recipe', recipeSchema);
+module.exports = mongoose.models.Recipe || mongoose.model('Recipe', recipeSchema);
