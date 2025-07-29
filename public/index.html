@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Share - Share Your Culinary Creations</title>
     <style>
-        /* ... Your existing CSS styles go here, unchanged ... */
         * {
             margin: 0;
             padding: 0;
@@ -183,6 +182,14 @@
             margin-bottom: 25px;
         }
 
+        /* NEW: Form row layout for time and difficulty */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -208,7 +215,6 @@
             transform: translateY(-2px);
         }
 
-        /* NEW: Category select styling */
         .form-group select {
             cursor: pointer;
             appearance: none;
@@ -219,7 +225,60 @@
             padding-right: 40px;
         }
 
-        /* NEW: Tags input container */
+        /* NEW: Difficulty level styling */
+        .difficulty-easy { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .difficulty-medium { background: linear-gradient(135deg, #ed8936, #dd6b20); }
+        .difficulty-hard { background: linear-gradient(135deg, #e53e3e, #c53030); }
+
+        .difficulty-badge {
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        /* NEW: Star rating system */
+        .star-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .star {
+            font-size: 20px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffd700;
+        }
+
+        .star.active {
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .rating-stars {
+            color: #ffd700;
+        }
+
+        .rating-count {
+            color: #666;
+            font-size: 12px;
+        }
+
         .tags-container {
             border: 2px dashed #cbd5e0;
             border-radius: 12px;
@@ -430,6 +489,31 @@
             transform: none;
         }
 
+        /* NEW: View toggle buttons */
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .view-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #4a5568;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
         .search-filter-bar {
             display: flex;
             gap: 15px;
@@ -446,7 +530,6 @@
             font-size: 16px;
         }
 
-        /* NEW: Filter controls */
         .filter-select {
             padding: 12px 16px;
             border: 2px solid #e2e8f0;
@@ -460,6 +543,67 @@
         .filter-select:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        /* NEW: Table view styles */
+        .recipes-table {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .recipes-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .recipes-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .recipes-table th:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        }
+
+        .recipes-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .recipes-table tr:hover {
+            background: #f7fafc;
+            cursor: pointer;
+        }
+
+        .table-category {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .table-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .table-time {
+            font-weight: 600;
+            color: #4a5568;
         }
 
         .recipes-grid {
@@ -514,9 +658,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        /* NEW: Category badge */
+        /* NEW: Recipe card meta info */
+        .recipe-details {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .recipe-time, .recipe-difficulty {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
         .category-badge {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -527,7 +689,6 @@
             text-transform: capitalize;
         }
 
-        /* NEW: Tags display */
         .recipe-tags {
             display: flex;
             flex-wrap: wrap;
@@ -629,6 +790,117 @@
             flex-wrap: wrap;
         }
 
+        /* NEW: Rating section in modal */
+        .rating-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .rating-section h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .user-rating {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .rate-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .rate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* NEW: Comments section */
+        .comments-section {
+            margin-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+        }
+
+        .comments-section h4 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .comment-form {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .comment-btn {
+            background: linear-gradient(135deg, #38a169, #2f855a);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .comment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 161, 105, 0.4);
+        }
+
+        .comment-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #718096;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
         .ingredients-list, .instructions-list {
             margin: 20px 0;
         }
@@ -727,7 +999,42 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Hebrew RTL Support */
+        .recipe-no-image {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .recipe-no-image span {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        
+        .delete-recipe-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-recipe-btn:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: scale(1.1);
+        }
+
         [dir="rtl"] {
             text-align: right;
         }
@@ -745,7 +1052,6 @@
             flex-direction: row-reverse;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -784,6 +1090,14 @@
                 width: 95%;
                 margin: 10% auto;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .recipes-table {
+                overflow-x: auto;
+            }
         }
 
         .empty-state {
@@ -797,42 +1111,6 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
-		
-		.recipe-no-image {
-			display: flex !important;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-			color: #6c757d;
-			font-size: 16px;
-			font-weight: 600;
-		}
-
-		.recipe-no-image span {
-			font-size: 2em;
-			margin-bottom: 8px;
-		}
-		
-		.delete-recipe-btn {
-			position: absolute;
-			top: 10px;
-			right: 10px;
-			background: rgba(220, 53, 69, 0.9);
-			color: white;
-			border: none;
-			border-radius: 50%;
-			width: 35px;
-			height: 35px;
-			cursor: pointer;
-			font-size: 16px;
-			transition: all 0.3s ease;
-		}
-
-		.delete-recipe-btn:hover {
-			background: rgba(220, 53, 69, 1);
-			transform: scale(1.1);
-		}
     </style>
 </head>
 <body>
@@ -856,7 +1134,6 @@
                         <input type="text" id="recipeTitle" required placeholder="Enter recipe title...">
                     </div>
 
-                    <!-- NEW: Category Selection -->
                     <div class="form-group">
                         <label for="recipeCategory" id="category-label">Category</label>
                         <select id="recipeCategory" required>
@@ -874,7 +1151,23 @@
                         </select>
                     </div>
 
-                    <!-- NEW: Tags Input -->
+                    <!-- NEW: Time and Difficulty Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cookingTime" id="time-label">Cooking Time (minutes)</label>
+                            <input type="number" id="cookingTime" required placeholder="30" min="1" max="600">
+                        </div>
+                        <div class="form-group">
+                            <label for="difficulty" id="difficulty-label">Difficulty Level</label>
+                            <select id="difficulty" required>
+                                <option value="">Select difficulty...</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label id="tags-label">Tags</label>
                         <div class="tags-container">
@@ -924,6 +1217,12 @@
             <div class="recipes-section">
                 <h2 id="recipes-title">Shared Recipes</h2>
                 
+                <!-- NEW: View Toggle -->
+                <div class="view-toggle">
+                    <button class="view-btn active" id="gridViewBtn" onclick="toggleView('grid')">Grid View</button>
+                    <button class="view-btn" id="tableViewBtn" onclick="toggleView('table')">Table View</button>
+                </div>
+                
                 <div class="search-filter-bar">
                     <input type="text" class="search-input" id="searchInput" placeholder="Search recipes..." onkeyup="searchRecipes()">
                     <select class="filter-select" id="categoryFilter" onchange="filterRecipes()">
@@ -939,14 +1238,38 @@
                         <option value="soups">Soups</option>
                         <option value="beverages">Beverages</option>
                     </select>
+                    <select class="filter-select" id="difficultyFilter" onchange="filterRecipes()">
+                        <option value="">All Difficulties</option>
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
                 </div>
 
+                <!-- Grid View -->
                 <div class="recipes-grid" id="recipesGrid">
                     <div class="empty-state" id="emptyState">
                         <div class="empty-state-icon">🍳</div>
                         <h3 id="empty-title">No recipes yet!</h3>
                         <p id="empty-subtitle">Be the first to share a delicious recipe</p>
                     </div>
+                </div>
+
+                <!-- NEW: Table View -->
+                <div class="recipes-table" id="recipesTable">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('category')">Category</th>
+                                <th onclick="sortTable('title')">Recipe Name</th>
+                                <th onclick="sortTable('cookingTime')">Time (min)</th>
+                                <th onclick="sortTable('averageRating')">Rating</th>
+                                <th onclick="sortTable('difficulty')">Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -959,12 +1282,36 @@
                 <h2 id="modalRecipeTitle"></h2>
                 <div class="modal-recipe-meta">
                     <span class="category-badge" id="modalRecipeCategory"></span>
+                    <span class="recipe-time" id="modalRecipeTime"></span>
+                    <span class="difficulty-badge" id="modalRecipeDifficulty"></span>
                     <p id="modalRecipeDate"></p>
                 </div>
             </div>
             <div class="modal-body">
                 <img id="modalRecipeImage" class="modal-recipe-image" style="display: none;">
                 <div class="recipe-tags" id="modalRecipeTags"></div>
+                
+                <!-- NEW: Rating Section -->
+                <div class="rating-section">
+                    <h4>Rating</h4>
+                    <div class="rating-display" id="modalRatingDisplay">
+                        <span class="rating-stars" id="modalRatingStars"></span>
+                        <span id="modalRatingScore">0.0</span>
+                        <span class="rating-count" id="modalRatingCount">(0 ratings)</span>
+                    </div>
+                    <div class="user-rating">
+                        <span>Rate this recipe:</span>
+                        <div class="star-rating" id="userRating">
+                            <span class="star" data-rating="1">★</span>
+                            <span class="star" data-rating="2">★</span>
+                            <span class="star" data-rating="3">★</span>
+                            <span class="star" data-rating="4">★</span>
+                            <span class="star" data-rating="5">★</span>
+                        </div>
+                        <button class="rate-btn" onclick="submitRating()">Submit Rating</button>
+                    </div>
+                </div>
+
                 <div class="ingredients-list">
                     <h4 id="modal-ingredients-title">Ingredients</h4>
                     <ul id="modalIngredientsList"></ul>
@@ -972,6 +1319,16 @@
                 <div class="instructions-list">
                     <h4 id="modal-instructions-title">Instructions</h4>
                     <ol id="modalInstructionsList"></ol>
+                </div>
+
+                <!-- NEW: Comments Section -->
+                <div class="comments-section">
+                    <h4>Comments</h4>
+                    <div class="comment-form">
+                        <textarea id="commentText" placeholder="Share your thoughts about this recipe..."></textarea>
+                        <button class="comment-btn" onclick="submitComment()">Add Comment</button>
+                    </div>
+                    <div id="commentsList"></div>
                 </div>
             </div>
         </div>
@@ -991,6 +1348,8 @@
                 'form-title': 'Add New Recipe',
                 'title-label': 'Recipe Title',
                 'category-label': 'Category',
+                'time-label': 'Cooking Time (minutes)',
+                'difficulty-label': 'Difficulty Level',
                 'tags-label': 'Tags',
                 'ingredients-label': 'Ingredients',
                 'instructions-label': 'Instructions',
@@ -1009,7 +1368,10 @@
                 'amount-placeholder': 'Amount...',
                 'step-placeholder': 'Step',
                 'tag-placeholder': 'Add tags (press Enter or comma)...',
-                'category-placeholder': 'Select a category...'
+                'category-placeholder': 'Select a category...',
+                'difficulty-placeholder': 'Select difficulty...',
+                'gridViewBtn': 'Grid View',
+                'tableViewBtn': 'Table View'
             },
             he: {
                 'site-title': 'שיתוף מתכונים',
@@ -1017,6 +1379,8 @@
                 'form-title': 'הוסף מתכון חדש',
                 'title-label': 'כותרת המתכון',
                 'category-label': 'קטגוריה',
+                'time-label': 'זמן הכנה (דקות)',
+                'difficulty-label': 'רמת קושי',
                 'tags-label': 'תגיות',
                 'ingredients-label': 'מצרכים',
                 'instructions-label': 'הוראות הכנה',
@@ -1035,13 +1399,19 @@
                 'amount-placeholder': 'כמות...',
                 'step-placeholder': 'שלב',
                 'tag-placeholder': 'הוסף תגיות (לחץ Enter או פסיק)...',
-                'category-placeholder': 'בחר קטגוריה...'
+                'category-placeholder': 'בחר קטגוריה...',
+                'difficulty-placeholder': 'בחר רמת קושי...',
+                'gridViewBtn': 'תצוגת רשת',
+                'tableViewBtn': 'תצוגת טבלה'
             }
         };
 
         let currentLang = 'en';
         let allRecipes = [];
-        let recipeTags = []; // Store current recipe tags
+        let recipeTags = [];
+        let currentView = 'grid';
+        let currentRecipeId = null;
+        let currentUserRating = 0;
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'he' : 'en';
@@ -1073,13 +1443,18 @@
                 flagIcon.className = 'flag-icon flag-israel';
                 langText.textContent = 'עברית';
             }
+            
             document.getElementById('searchInput').placeholder = translations[currentLang]['search-placeholder'];
             document.getElementById('tagInput').placeholder = translations[currentLang]['tag-placeholder'];
             
-            // Update category select first option
+            // Update select options
             const categorySelect = document.getElementById('recipeCategory');
+            const difficultySelect = document.getElementById('difficulty');
             if (categorySelect) {
                 categorySelect.options[0].text = translations[currentLang]['category-placeholder'];
+            }
+            if (difficultySelect) {
+                difficultySelect.options[0].text = translations[currentLang]['difficulty-placeholder'];
             }
             
             updatePlaceholders();
@@ -1097,7 +1472,222 @@
             });
         }
 
-        // NEW: Tags Management
+        // NEW: View Toggle Functions
+        function toggleView(view) {
+            currentView = view;
+            const gridView = document.getElementById('recipesGrid');
+            const tableView = document.getElementById('recipesTable');
+            const gridBtn = document.getElementById('gridViewBtn');
+            const tableBtn = document.getElementById('tableViewBtn');
+
+            if (view === 'grid') {
+                gridView.style.display = 'grid';
+                tableView.style.display = 'none';
+                gridBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            } else {
+                gridView.style.display = 'none';
+                tableView.style.display = 'block';
+                gridBtn.classList.remove('active');
+                tableBtn.classList.add('active');
+                renderTableView(allRecipes);
+            }
+        }
+
+        // NEW: Table sorting
+        let sortColumn = '';
+        let sortDirection = 'asc';
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            const sortedRecipes = [...allRecipes].sort((a, b) => {
+                let aValue = a[column];
+                let bValue = b[column];
+
+                if (column === 'averageRating') {
+                    aValue = a.averageRating || 0;
+                    bValue = b.averageRating || 0;
+                } else if (column === 'cookingTime') {
+                    aValue = parseInt(a.cookingTime) || 0;
+                    bValue = parseInt(b.cookingTime) || 0;
+                }
+
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                    bValue = bValue.toLowerCase();
+                }
+
+                if (sortDirection === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+
+            renderTableView(sortedRecipes);
+        }
+
+        // NEW: Rating Functions
+        function initializeRatingSystem() {
+            const stars = document.querySelectorAll('#userRating .star');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    currentUserRating = parseInt(this.dataset.rating);
+                    updateStarDisplay('#userRating', currentUserRating);
+                });
+
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    updateStarDisplay('#userRating', rating);
+                });
+            });
+
+            document.getElementById('userRating').addEventListener('mouseleave', function() {
+                updateStarDisplay('#userRating', currentUserRating);
+            });
+        }
+
+        function updateStarDisplay(selector, rating) {
+            const stars = document.querySelectorAll(`${selector} .star`);
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        function displayRating(rating, count) {
+            const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+            return { stars, rating: rating.toFixed(1), count };
+        }
+
+        async function submitRating() {
+            if (!currentRecipeId || currentUserRating === 0) {
+                showNotification('Please select a rating first', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/recipes/${currentRecipeId}/rate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rating: currentUserRating })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit rating');
+                }
+
+                showNotification('Rating submitted successfully!');
+                await fetchAndDisplayRecipes();
+                
+                // Update modal rating display
+                const recipe = allRecipes.find(r => r._id === currentRecipeId);
+                if (recipe) {
+                    updateModalRating(recipe);
+                }
+
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showNotification('Failed to submit rating', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateModalRating(recipe) {
+            const rating = recipe.averageRating || 0;
+            const count = recipe.ratingsCount || 0;
+            const ratingInfo = displayRating(rating, count);
+            
+            document.getElementById('modalRatingStars').textContent = ratingInfo.stars;
+            document.getElementById('modalRatingScore').textContent = ratingInfo.rating;
+            document.getElementById('modalRatingCount').textContent = `(${count} ratings)`;
+        }
+
+        // NEW: Comments Functions
+        async function submitComment() {
+            const commentText = document.getElementById('commentText').value.trim();
+            if (!commentText || !currentRecipeId) {
+                showNotification('Please enter a comment', 'error');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/recipes/${currentRecipeId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: commentText })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit comment');
+                }
+
+                document.getElementById('commentText').value = '';
+                showNotification('Comment added successfully!');
+                
+                // Refresh comments
+                const recipe = allRecipes.find(r => r._id === currentRecipeId);
+                if (recipe) {
+                    await loadComments(currentRecipeId);
+                }
+
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+                showNotification('Failed to submit comment', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadComments(recipeId) {
+            try {
+                const response = await fetch(`/api/recipes/${recipeId}/comments`);
+                if (!response.ok) {
+                    throw new Error('Failed to load comments');
+                }
+                
+                const comments = await response.json();
+                displayComments(comments);
+            } catch (error) {
+                console.error('Error loading comments:', error);
+            }
+        }
+
+        function displayComments(comments) {
+            const commentsList = document.getElementById('commentsList');
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<p style="text-align: center; color: #666;">No comments yet. Be the first to comment!</p>';
+                return;
+            }
+
+            commentsList.innerHTML = comments.map(comment => `
+                <div class="comment-item">
+                    <div class="comment-meta">
+                        <span class="comment-author">Anonymous</span>
+                        <span>${new Date(comment.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p>${comment.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // Tags Management
         function initializeTagsInput() {
             const tagInput = document.getElementById('tagInput');
             
@@ -1138,11 +1728,9 @@
             const wrapper = document.getElementById('tagsWrapper');
             const input = document.getElementById('tagInput');
             
-            // Clear existing tags
             const existingTags = wrapper.querySelectorAll('.tag-chip');
             existingTags.forEach(tag => tag.remove());
             
-            // Add tags before input
             recipeTags.forEach(tag => {
                 const tagChip = document.createElement('div');
                 tagChip.className = 'tag-chip';
@@ -1153,11 +1741,8 @@
                 wrapper.insertBefore(tagChip, input);
             });
         }
-        
-        // =================================================================
-        // Recipe Management Functions (UPDATED FOR API CALLS)
-        // =================================================================
 
+        // Recipe Management Functions
         function addIngredient() {
             const container = document.getElementById('ingredientsContainer');
             const ingredientItem = document.createElement('div');
@@ -1238,7 +1823,11 @@
                     throw new Error('Failed to fetch recipes');
                 }
                 allRecipes = await response.json();
-                renderRecipes(allRecipes);
+                if (currentView === 'grid') {
+                    renderRecipes(allRecipes);
+                } else {
+                    renderTableView(allRecipes);
+                }
             } catch (error) {
                 console.error('Error fetching recipes:', error);
                 showNotification('Failed to load recipes. Please try again later.', 'error');
@@ -1248,109 +1837,165 @@
         }
 
         function renderRecipes(recipesToRender) {
-			const recipesGrid = document.getElementById('recipesGrid');
-			
-			// Clear existing recipe cards but preserve the empty state element
-			recipesGrid.innerHTML = `
-				<div class="empty-state" id="emptyState" style="display: none;">
-					<div class="empty-state-icon">🍳</div>
-					<h3 id="empty-title">No recipes yet!</h3>
-					<p id="empty-subtitle">Be the first to share a delicious recipe</p>
-				</div>
-			`;
-			
-			const emptyState = document.getElementById('emptyState');
-			
-			if (recipesToRender.length === 0) {
-				emptyState.style.display = 'block';
-			} else {
-				emptyState.style.display = 'none';
-				recipesToRender.forEach(recipe => {
-					const card = createRecipeCard(recipe);
-					recipesGrid.appendChild(card);
-				});
-			}
-			
-			// Update translations for the empty state
-			if (currentLang === 'he') {
-				document.getElementById('empty-title').textContent = translations.he['empty-title'];
-				document.getElementById('empty-subtitle').textContent = translations.he['empty-subtitle'];
-			}
-		}
+            const recipesGrid = document.getElementById('recipesGrid');
+            
+            recipesGrid.innerHTML = `
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-state-icon">🍳</div>
+                    <h3 id="empty-title">No recipes yet!</h3>
+                    <p id="empty-subtitle">Be the first to share a delicious recipe</p>
+                </div>
+            `;
+            
+            const emptyState = document.getElementById('emptyState');
+            
+            if (recipesToRender.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                recipesToRender.forEach(recipe => {
+                    const card = createRecipeCard(recipe);
+                    recipesGrid.appendChild(card);
+                });
+            }
+            
+            if (currentLang === 'he') {
+                document.getElementById('empty-title').textContent = translations.he['empty-title'];
+                document.getElementById('empty-subtitle').textContent = translations.he['empty-subtitle'];
+            }
+        }
+
+        // NEW: Table view renderer
+        function renderTableView(recipesToRender) {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (recipesToRender.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                            No recipes found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = recipesToRender.map(recipe => {
+                const rating = recipe.averageRating || 0;
+                const ratingDisplay = displayRating(rating, recipe.ratingsCount || 0);
+                const difficultyClass = `difficulty-${recipe.difficulty}`;
+                
+                return `
+                    <tr onclick="openModal('${recipe._id}')">
+                        <td><span class="table-category">${recipe.category}</span></td>
+                        <td><strong>${recipe.title}</strong></td>
+                        <td><span class="table-time">${recipe.cookingTime || 'N/A'}</span></td>
+                        <td>
+                            <div class="table-rating">
+                                <span style="color: #ffd700;">${ratingDisplay.stars}</span>
+                                <span>${ratingDisplay.rating}</span>
+                            </div>
+                        </td>
+                        <td><span class="difficulty-badge ${difficultyClass}">${recipe.difficulty}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
         function createRecipeCard(recipe) {
-			const card = document.createElement('div');
-			card.className = 'recipe-card';
-			card.setAttribute('onclick', `openModal('${recipe._id}')`);
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.setAttribute('onclick', `openModal('${recipe._id}')`);
 
-			const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
-			const date = new Date(recipe.createdAt).toLocaleDateString();
+            const ingredientNames = recipe.ingredients.map(ing => ing.name).join(', ');
+            const date = new Date(recipe.createdAt).toLocaleDateString();
+            const rating = recipe.averageRating || 0;
+            const ratingDisplay = displayRating(rating, recipe.ratingsCount || 0);
 
-			const imageHtml = recipe.imageUrl 
-				? `<img src="${recipe.imageUrl}" alt="${recipe.title}" class="recipe-image">`
-				: `<div class="recipe-image recipe-no-image">
-					 <span>📷</span>
-					 <div>No Image</div>
-				   </div>`;
+            const imageHtml = recipe.imageUrl 
+                ? `<img src="${recipe.imageUrl}" alt="${recipe.title}" class="recipe-image">`
+                : `<div class="recipe-image recipe-no-image">
+                     <span>📷</span>
+                     <div>No Image</div>
+                   </div>`;
 
-            // NEW: Render tags
             const tagsHtml = recipe.tags && recipe.tags.length > 0 
                 ? `<div class="recipe-tags">
                      ${recipe.tags.map(tag => `<span class="recipe-tag">${tag}</span>`).join('')}
                    </div>`
                 : '';
 
-			card.innerHTML = `
-				${imageHtml}
-				<button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
-				<div class="recipe-content">
-					<div class="recipe-title">${recipe.title}</div>
-					<div class="recipe-meta">
+            const difficultyClass = `difficulty-${recipe.difficulty}`;
+
+            card.innerHTML = `
+                ${imageHtml}
+                <button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
+                <div class="recipe-content">
+                    <div class="recipe-title">${recipe.title}</div>
+                    <div class="recipe-meta">
                         <span>Shared on ${date}</span>
                         <span class="category-badge">${recipe.category}</span>
                     </div>
+                    <div class="recipe-details">
+                        <span class="recipe-time">⏱️ ${recipe.cookingTime || 'N/A'} min</span>
+                        <span class="difficulty-badge ${difficultyClass}">${recipe.difficulty}</span>
+                    </div>
+                    <div class="rating-display">
+                        <span class="rating-stars">${ratingDisplay.stars}</span>
+                        <span>${ratingDisplay.rating}</span>
+                        <span class="rating-count">(${recipe.ratingsCount || 0})</span>
+                    </div>
                     ${tagsHtml}
-					<div class="recipe-ingredients-preview">${ingredientNames}</div>
-				</div>
-			`;
-			
-			return card;
-		}
+                    <div class="recipe-ingredients-preview">${ingredientNames}</div>
+                </div>
+            `;
+            
+            return card;
+        }
         
-		async function deleteRecipe(recipeId, event) {
-			event.stopPropagation(); // Prevent opening modal
-			
-			if (!confirm('Are you sure you want to delete this recipe?')) return;
+        async function deleteRecipe(recipeId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('Are you sure you want to delete this recipe?')) return;
 
             showLoading(true);
-			
-			try {
-				const response = await fetch(`/api/recipes/${recipeId}`, {
-					method: 'DELETE'
-				});
-				
-				if (response.ok) {
-					showNotification('Recipe deleted successfully!');
-					await fetchAndDisplayRecipes(); // Refresh the list
-				} else {
+            
+            try {
+                const response = await fetch(`/api/recipes/${recipeId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showNotification('Recipe deleted successfully!');
+                    await fetchAndDisplayRecipes();
+                } else {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to delete recipe');
                 }
-			} catch (error) {
+            } catch (error) {
                 console.error('Error deleting recipe:', error);
-				showNotification(error.message || 'Failed to delete recipe', 'error');
-			} finally {
+                showNotification(error.message || 'Failed to delete recipe', 'error');
+            } finally {
                 showLoading(false);
             }
-		}
+        }
 
         function openModal(recipeId) {
             const recipe = allRecipes.find(r => r._id === recipeId);
             if (!recipe) return;
 
+            currentRecipeId = recipeId;
+            currentUserRating = 0;
+            updateStarDisplay('#userRating', 0);
+
             document.getElementById('modalRecipeTitle').textContent = recipe.title;
             document.getElementById('modalRecipeDate').textContent = `Shared on ${new Date(recipe.createdAt).toLocaleDateString()}`;
             document.getElementById('modalRecipeCategory').textContent = recipe.category;
+            document.getElementById('modalRecipeTime').textContent = `⏱️ ${recipe.cookingTime || 'N/A'} min`;
+            
+            const difficultyElement = document.getElementById('modalRecipeDifficulty');
+            difficultyElement.textContent = recipe.difficulty;
+            difficultyElement.className = `difficulty-badge difficulty-${recipe.difficulty}`;
 
             const modalImage = document.getElementById('modalRecipeImage');
             if (recipe.imageUrl) {
@@ -1360,7 +2005,6 @@
                 modalImage.style.display = 'none';
             }
 
-            // NEW: Display tags in modal
             const modalTags = document.getElementById('modalRecipeTags');
             if (recipe.tags && recipe.tags.length > 0) {
                 modalTags.innerHTML = recipe.tags.map(tag => `<span class="recipe-tag">${tag}</span>`).join('');
@@ -1369,22 +2013,29 @@
                 modalTags.style.display = 'none';
             }
 
+            updateModalRating(recipe);
+
             const ingredientsList = document.getElementById('modalIngredientsList');
             ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li><span>${ing.name}</span><span>${ing.amount}</span></li>`).join('');
 
             const instructionsList = document.getElementById('modalInstructionsList');
             instructionsList.innerHTML = recipe.instructions.map(step => `<li>${step}</li>`).join('');
 
+            loadComments(recipeId);
+
             document.getElementById('recipeModal').style.display = 'block';
         }
 
         function closeModal() {
             document.getElementById('recipeModal').style.display = 'none';
+            currentRecipeId = null;
+            currentUserRating = 0;
         }
 
         function searchRecipes() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const categoryFilter = document.getElementById('categoryFilter').value;
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
             
             let filteredRecipes = allRecipes.filter(recipe => {
                 const titleMatch = recipe.title.toLowerCase().includes(searchTerm);
@@ -1393,29 +2044,34 @@
                 const searchMatch = titleMatch || ingredientMatch || tagMatch;
                 
                 const categoryMatch = !categoryFilter || recipe.category === categoryFilter;
+                const difficultyMatch = !difficultyFilter || recipe.difficulty === difficultyFilter;
                 
-                return searchMatch && categoryMatch;
+                return searchMatch && categoryMatch && difficultyMatch;
             });
             
-            renderRecipes(filteredRecipes);
+            if (currentView === 'grid') {
+                renderRecipes(filteredRecipes);
+            } else {
+                renderTableView(filteredRecipes);
+            }
         }
 
         function filterRecipes() {
-            searchRecipes(); // Use the same filtering logic
+            searchRecipes();
         }
 
         document.getElementById('recipeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-			console.log("Form submission button clicked!");
             showLoading(true);
 
             const formData = new FormData();
             formData.append('title', document.getElementById('recipeTitle').value);
             formData.append('category', document.getElementById('recipeCategory').value);
+            formData.append('cookingTime', document.getElementById('cookingTime').value);
+            formData.append('difficulty', document.getElementById('difficulty').value);
             formData.append('tags', JSON.stringify(recipeTags));
             formData.append('image', document.getElementById('recipeImage').files[0]);
 
-            // Collect ingredients and instructions and serialize as JSON
             const ingredients = [];
             document.querySelectorAll('.ingredient-item').forEach(item => {
                 const inputs = item.querySelectorAll('input');
@@ -1449,11 +2105,9 @@
                 document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
                 document.getElementById('file-label').classList.remove('has-file');
                 
-                // Clear tags
                 recipeTags = [];
                 renderTags();
 
-                // Re-fetch and display recipes to show the new one
                 await fetchAndDisplayRecipes();
 
             } catch (error) {
@@ -1463,10 +2117,6 @@
                 showLoading(false);
             }
         });
-
-        // =================================================================
-        // Helper Functions (unchanged from your original code)
-        // =================================================================
 
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
@@ -1483,13 +2133,21 @@
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
-        // Run on page load
+        // Click outside modal to close
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('recipeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Initialize on page load
         window.addEventListener('load', () => {
             updateTranslations();
             initializeTagsInput();
+            initializeRatingSystem();
             fetchAndDisplayRecipes();
         });
-
     </script>
 </body>
 </html>
