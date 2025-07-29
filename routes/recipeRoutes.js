@@ -85,7 +85,7 @@ const recipeSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 		enum: ['easy', 'medium', 'hard']
-	}
+	},
     tags: [{
         type: String,
         trim: true,
