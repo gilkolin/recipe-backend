@@ -49,10 +49,10 @@ app.post('/api/recipes/:id/rate', async (req, res) => {
         if (!recipe.ratings) {
             recipe.ratings = [];
         }
-        recipe.ratings.push(rating);
+        recipe.ratings.push({ rating });
         
         // Calculate average
-        const total = recipe.ratings.reduce((sum, r) => sum + r, 0);
+        const total = recipe.ratings.reduce((sum, r) => sum + r.rating, 0);
         recipe.averageRating = total / recipe.ratings.length;
         recipe.ratingsCount = recipe.ratings.length;
         
