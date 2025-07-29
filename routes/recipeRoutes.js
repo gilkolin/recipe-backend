@@ -77,6 +77,15 @@ const recipeSchema = new mongoose.Schema({
         ],
         lowercase: true
     },
+	cookingTime: {
+    type: Number,
+    required: true
+	},
+	difficulty: {
+		type: String,
+		required: true,
+		enum: ['easy', 'medium', 'hard']
+	}
     tags: [{
         type: String,
         trim: true,
