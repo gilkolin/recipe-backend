@@ -71,7 +71,10 @@ const recipeSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['pastries', 'cakes', 'cookies', 'cooking', 'bread', 'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'],
+        enum: [
+            'pastries', 'cakes', 'cookies', 'cooking', 'bread',
+            'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'
+        ],
         lowercase: true
     },
     tags: [{
@@ -104,8 +107,54 @@ const recipeSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+
+    // 🔥 Ratings feature
+    ratings: [{
+        rating: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    ratingsCount: {
+        type: Number,
+        default: 0
+    },
+
+    // 💬 Comments feature
+    comments: [{
+        text: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        author: {
+            type: String,
+            default: 'Anonymous',
+            trim: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 });
+
+// 📈 Useful indexes
+recipeSchema.index({ category: 1 });
+recipeSchema.index({ averageRating: -1 });
+recipeSchema.index({ createdAt: -1 });
+
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
@@ -363,4 +412,56 @@ router.use((error, req, res, next) => {
     next(error);
 });
 
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { text, author = 'Anonymous' } = req.body;
+    if (!text) return res.status(400).json({ message: 'Comment text is required.' });
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) return res.status(404).json({ message: 'Recipe not found' });
+
+    recipe.comments.push({ text, author });
+    await recipe.save();
+
+    res.json({ message: 'Comment added successfully' });
+  } catch (err) {
+    console.error('Error adding comment:', err);
+    res.status(500).json({ message: 'Failed to add comment' });
+  }
+});
+
+router.post('/:id/ratings', async (req, res) => {
+  try {
+    const { rating } = req.body;
+    const numericRating = parseInt(rating);
+
+    if (!numericRating || numericRating < 1 || numericRating > 5)
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) return res.status(404).json({ message: 'Recipe not found' });
+
+    // Add rating
+    recipe.ratings.push({ rating: numericRating });
+
+    // Recalculate average rating
+    const ratingsTotal = recipe.ratings.reduce((sum, r) => sum + r.rating, 0);
+    const ratingsCount = recipe.ratings.length;
+    const averageRating = ratingsTotal / ratingsCount;
+
+    recipe.averageRating = averageRating.toFixed(2); // optional: round to 2 digits
+    recipe.ratingsCount = ratingsCount;
+
+    await recipe.save();
+
+    res.json({
+      message: 'Rating submitted successfully',
+      averageRating: recipe.averageRating,
+      ratingsCount: recipe.ratingsCount
+    });
+  } catch (err) {
+    console.error('Error adding rating:', err);
+    res.status(500).json({ message: 'Failed to submit rating' });
+  }
+});
 module.exports = router;
