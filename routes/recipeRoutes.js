@@ -60,7 +60,7 @@ const uploadToCloudinary = (buffer, filename) => {
     });
 };
 
-// Your existing Recipe schema
+// UPDATED Recipe schema with categories and tags
 const recipeSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -68,6 +68,18 @@ const recipeSchema = new mongoose.Schema({
         trim: true,
         maxlength: 200
     },
+    category: {
+        type: String,
+        required: true,
+        enum: ['pastries', 'cakes', 'cookies', 'cooking', 'bread', 'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'],
+        lowercase: true
+    },
+    tags: [{
+        type: String,
+        trim: true,
+        lowercase: true,
+        maxlength: 50
+    }],
     ingredients: [{
         name: {
             type: String,
@@ -97,10 +109,9 @@ const recipeSchema = new mongoose.Schema({
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// POST a new recipe (with manual image upload)
+// POST a new recipe (UPDATED with category and tags)
 router.post('/', upload.single('image'), async (req, res) => {
     try {
-        // Add this debugging block
         console.log('=== DEBUGGING START ===');
         console.log('File received:', !!req.file);
         if (req.file) {
@@ -111,31 +122,28 @@ router.post('/', upload.single('image'), async (req, res) => {
             });
         }
         
-        console.log('Cloudinary config test:', {
-            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-            api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
-            api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
-        });
+        console.log('Request body:', req.body);
         console.log('=== DEBUGGING END ===');
 
-        const { title, ingredients, instructions } = req.body;
+        const { title, category, tags, ingredients, instructions } = req.body;
 
         // Validation
-        if (!title || !ingredients || !instructions) {
+        if (!title || !category || !ingredients || !instructions) {
             return res.status(400).json({ 
-                message: 'Missing required fields: title, ingredients, and instructions are required' 
+                message: 'Missing required fields: title, category, ingredients, and instructions are required' 
             });
         }
 
         // Parse JSON data
-        let parsedIngredients, parsedInstructions;
+        let parsedIngredients, parsedInstructions, parsedTags;
         
         try {
             parsedIngredients = JSON.parse(ingredients);
             parsedInstructions = JSON.parse(instructions);
+            parsedTags = tags ? JSON.parse(tags) : [];
         } catch (parseError) {
             return res.status(400).json({ 
-                message: 'Invalid JSON format for ingredients or instructions' 
+                message: 'Invalid JSON format for ingredients, instructions, or tags' 
             });
         }
 
@@ -149,6 +157,14 @@ router.post('/', upload.single('image'), async (req, res) => {
         if (!Array.isArray(parsedInstructions) || parsedInstructions.length === 0) {
             return res.status(400).json({ 
                 message: 'Instructions must be a non-empty array' 
+            });
+        }
+
+        // Validate category
+        const validCategories = ['pastries', 'cakes', 'cookies', 'cooking', 'bread', 'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'];
+        if (!validCategories.includes(category.toLowerCase())) {
+            return res.status(400).json({ 
+                message: 'Invalid category. Must be one of: ' + validCategories.join(', ')
             });
         }
 
@@ -168,6 +184,8 @@ router.post('/', upload.single('image'), async (req, res) => {
 
         const newRecipe = new Recipe({
             title: title.trim(),
+            category: category.toLowerCase(),
+            tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
             ingredients: parsedIngredients.map(ing => ({
                 name: ing.name?.trim(),
                 amount: ing.amount?.trim()
@@ -177,11 +195,10 @@ router.post('/', upload.single('image'), async (req, res) => {
         });
 
         const savedRecipe = await newRecipe.save();
-		console.log('Recipe saved successfully:', savedRecipe._id);
+        console.log('Recipe saved successfully:', savedRecipe._id);
 
-		// Add this verification:
-		const verification = await Recipe.findById(savedRecipe._id);
-		console.log('Verification - recipe exists in DB:', !!verification);
+        const verification = await Recipe.findById(savedRecipe._id);
+        console.log('Verification - recipe exists in DB:', !!verification);
         
         res.status(201).json({
             message: 'Recipe saved successfully!',
@@ -205,10 +222,32 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });
 
-// GET all recipes
+// GET all recipes (UPDATED to support category and tag filtering)
 router.get('/', async (req, res) => {
     try {
-        const recipes = await Recipe.find().sort({ createdAt: -1 });
+        const { category, tags, search } = req.query;
+        let query = {};
+
+        // Filter by category
+        if (category) {
+            query.category = category.toLowerCase();
+        }
+
+        // Filter by tags
+        if (tags) {
+            const tagArray = tags.split(',').map(tag => tag.trim().toLowerCase());
+            query.tags = { $in: tagArray };
+        }
+
+        // Search in title and ingredients
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { 'ingredients.name': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const recipes = await Recipe.find(query).sort({ createdAt: -1 });
         res.json(recipes);
     } catch (error) {
         console.error('Error fetching recipes:', error);
@@ -236,19 +275,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-
-
-router.delete("/delete/:id", async (req, res) => {
-  try {
-    const result = await Recipe.findByIdAndDelete(req.params.id);
-    if (!result) return res.status(404).send("Recipe not found");
-    res.send("Deleted successfully");
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-// DELETE a recipe
+// DELETE a recipe (FIXED - extract public_id correctly from Cloudinary URL)
 router.delete('/:id', async (req, res) => {
     try {
         const recipe = await Recipe.findById(req.params.id);
@@ -260,8 +287,17 @@ router.delete('/:id', async (req, res) => {
         // Delete image from Cloudinary if it exists
         if (recipe.imageUrl) {
             try {
-                const publicId = recipe.imageUrl.split('/').pop().split('.')[0];
-                await cloudinary.uploader.destroy(`recipe-app/${publicId}`);
+                // Extract public_id from Cloudinary URL
+                // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/recipe-app/recipe-filename-timestamp.jpg
+                const urlParts = recipe.imageUrl.split('/');
+                const fileWithExtension = urlParts[urlParts.length - 1]; // recipe-filename-timestamp.jpg
+                const fileName = fileWithExtension.split('.')[0]; // recipe-filename-timestamp
+                const publicId = `recipe-app/${fileName}`;
+                
+                console.log('Attempting to delete image with public_id:', publicId);
+                
+                await cloudinary.uploader.destroy(publicId);
+                console.log('Image deleted from Cloudinary successfully');
             } catch (cloudinaryError) {
                 console.error('Error deleting image from Cloudinary:', cloudinaryError);
                 // Continue with recipe deletion even if image deletion fails
@@ -269,12 +305,44 @@ router.delete('/:id', async (req, res) => {
         }
 
         await Recipe.findByIdAndDelete(req.params.id);
+        console.log('Recipe deleted successfully from database');
         
         res.json({ message: 'Recipe deleted successfully' });
     } catch (error) {
         console.error('Error deleting recipe:', error);
         res.status(500).json({ 
             message: 'Failed to delete recipe',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// GET all unique tags (for tag suggestions)
+router.get('/meta/tags', async (req, res) => {
+    try {
+        const tags = await Recipe.distinct('tags');
+        res.json(tags.sort());
+    } catch (error) {
+        console.error('Error fetching tags:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch tags',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// GET recipe count by category
+router.get('/meta/categories', async (req, res) => {
+    try {
+        const categories = await Recipe.aggregate([
+            { $group: { _id: '$category', count: { $sum: 1 } } },
+            { $sort: { _id: 1 } }
+        ]);
+        res.json(categories);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch categories',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
