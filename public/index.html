@@ -1706,8 +1706,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to submit comment');
-                }
+					throw new Error('Failed to submit comment');
+				}
+				
+				const responseData = await response.json(); // Add this line
+				console.log('Comment submit response:', responseData); // Add this line
+
+				document.getElementById('commentText').value = '';
 
                 document.getElementById('commentText').value = '';
                 showNotification('Comment added successfully!');
@@ -1728,38 +1733,59 @@
         }
 
         async function loadComments(recipeId) {
-            try {
-                const response = await fetch(`/api/recipes/${recipeId}/comments`);
-                if (!response.ok) {
-                    throw new Error('Failed to load comments');
-                }
-                
-                const comments = await response.json();
-                displayComments(comments);
-                return comments;
-            } catch (error) {
-                console.error('Error loading comments:', error);
-                return [];
-            }
-        }
+			try {
+				console.log('Loading comments for recipe:', recipeId); // Add debug log
+				const response = await fetch(`/api/recipes/${recipeId}/comments`);
+				console.log('Comments response status:', response.status); // Add debug log
+				
+				if (!response.ok) {
+					throw new Error('Failed to load comments');
+				}
+				
+				const comments = await response.json();
+				console.log('Comments loaded:', comments); // Add debug log
+				displayComments(comments);
+				return comments;
+			} catch (error) {
+				console.error('Error loading comments:', error);
+				// Try to get comments from the recipe object as fallback
+				const recipe = allRecipes.find(r => r._id === recipeId);
+				if (recipe && recipe.comments) {
+					console.log('Using fallback comments from recipe:', recipe.comments);
+					displayComments(recipe.comments);
+					return recipe.comments;
+				}
+				return [];
+			}
+		}
 
         function displayComments(comments) {
-            const commentsList = document.getElementById('commentsList');
-            if (comments.length === 0) {
-                commentsList.innerHTML = '<p style="text-align: center; color: #666;">No comments yet. Be the first to comment!</p>';
-                return;
-            }
+			const commentsList = document.getElementById('commentsList');
+			console.log('Displaying comments:', comments, 'Length:', comments.length); // Add debug log
+			
+			if (!comments || comments.length === 0) {
+				commentsList.innerHTML = '<p style="text-align: center; color: #666;">No comments yet. Be the first to comment!</p>';
+				return;
+			}
 
-            commentsList.innerHTML = comments.map(comment => `
-                <div class="comment-item">
-                    <div class="comment-meta">
-                        <span class="comment-author">Anonymous</span>
-                        <span>${new Date(comment.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p>${comment.text}</p>
-                </div>
-            `).join('');
-        }
+			commentsList.innerHTML = comments.map((comment, index) => {
+				console.log(`Comment ${index}:`, comment); // Add debug log
+				// Handle different possible comment structures
+				const commentText = comment.text || comment.comment || comment.message || 'No comment text';
+				const commentDate = comment.createdAt || comment.date || comment.timestamp || new Date();
+				const commentAuthor = comment.author || comment.user || 'Anonymous';
+				
+				return `
+					<div class="comment-item">
+						<div class="comment-meta">
+							<span class="comment-author">${commentAuthor}</span>
+							<span>${new Date(commentDate).toLocaleDateString()}</span>
+						</div>
+						<p>${commentText}</p>
+					</div>
+				`;
+			}).join('');
+		}
 
         function initializeTagsInput() {
             const tagInput = document.getElementById('tagInput');
