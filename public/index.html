@@ -1583,19 +1583,29 @@
             renderTableView(sortedRecipes);
         }
 
-        // NEW: Get comment count for a recipe
         async function getCommentCount(recipeId) {
-            try {
-                const response = await fetch(`/api/recipes/${recipeId}/comments`);
-                if (response.ok) {
-                    const comments = await response.json();
-                    return comments.length;
-                }
-            } catch (error) {
-                console.error('Error getting comment count:', error);
-            }
-            return 0;
-        }
+			try {
+				const response = await fetch(`/api/recipes/${recipeId}/comments`);
+				if (response.ok) {
+					const comments = await response.json();
+					return comments.length;
+				}
+			} catch (error) {
+				console.error('Error getting comment count:', error);
+			}
+			return 0;
+		}
+
+		// Fallback: get comment count from recipe data if available
+		function getCommentCountFromRecipe(recipe) {
+			if (recipe.comments && Array.isArray(recipe.comments)) {
+				return recipe.comments.length;
+			}
+			if (recipe.commentCount !== undefined) {
+				return recipe.commentCount;
+			}
+			return 0;
+		}
 
         function initializeRatingSystem() {
             const stars = document.querySelectorAll('#userRating .star');
@@ -1884,12 +1894,22 @@
                 if (!response.ok) {
                     throw new Error('Failed to fetch recipes');
                 }
-                allRecipes = await response.json();
-                
-                // Add comment counts to recipes
-                for (let recipe of allRecipes) {
-                    recipe.commentCount = await getCommentCount(recipe._id);
-                }
+				allRecipes = await response.json();
+
+				// Add comment counts to recipes
+				for (let recipe of allRecipes) {
+					// Try to get comment count from API first, then fallback to recipe data
+					try {
+						recipe.commentCount = await getCommentCount(recipe._id);
+					} catch (error) {
+						recipe.commentCount = getCommentCountFromRecipe(recipe);
+					}
+					
+					// If still 0, check if comments exist in the recipe object
+					if (recipe.commentCount === 0 && recipe.comments) {
+						recipe.commentCount = recipe.comments.length;
+					}
+				}
                 
                 if (currentView === 'grid') {
                     renderRecipes(allRecipes);
@@ -1953,6 +1973,7 @@
                 const difficultyClass = `difficulty-${recipe.difficulty}`;
                 const commentIndicator = recipe.commentCount > 0 ? 
                     `<span class="comment-indicator" title="${recipe.commentCount} comments">💬</span>` : '';
+					console.log(`Table Recipe ${recipe.title}: commentCount = ${recipe.commentCount}`); // Add this line
                 
                 return `
                     <tr onclick="openModal('${recipe._id}')">
@@ -2005,7 +2026,8 @@
             const difficultyClass = `difficulty-${recipe.difficulty}`;
             const commentIndicator = recipe.commentCount > 0 ? 
                 `<span class="comment-indicator" title="${recipe.commentCount} comments">💬</span>` : '';
-
+			console.log(`Recipe ${recipe.title}: commentCount = ${recipe.commentCount}`); // Add this line
+			
             card.innerHTML = `
                 ${imageHtml}
                 <button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
