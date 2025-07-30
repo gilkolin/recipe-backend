@@ -1308,7 +1308,6 @@
 					</div>
 					<button type="button" class="add-btn" onclick="addIngredient()" id="add-ingredient-btn">+ Add Ingredient</button>
 					<button type="button" class="add-btn secondary" onclick="addIngredientGroup()">+ Add Ingredient Group</button>
-                        <button type="button" class="add-btn" onclick="addIngredient()" id="add-ingredient-btn">+ Add Ingredient</button>
                     </div>
 
                     <div class="form-group">
@@ -1512,7 +1511,8 @@
                 'table-header-time': 'Time (min)',
                 'table-header-rating': 'Rating',
                 'table-header-difficulty': 'Difficulty',
-                'table-header-actions': 'Actions'
+                'table-header-actions': 'Actions',
+				'update-btn': 'Update Recipe'
             },
             he: {
                 'site-title': 'שיתוף מתכונים',
@@ -1550,7 +1550,8 @@
                 'table-header-time': 'זמן (דק\')',
                 'table-header-rating': 'דירוג',
                 'table-header-difficulty': 'קושי',
-                'table-header-actions': 'פעולות'
+                'table-header-actions': 'פעולות',
+				'update-btn': 'עדכן מתכון'
             }
         };
 
@@ -2329,8 +2330,14 @@
                     throw new Error(errorData.message || 'Failed to save recipe');
                 }
 
-                showNotification('Recipe shared successfully!');
+				if (isEditing) {
+					showNotification('Recipe updated successfully!');
+				} else {
+					showNotification('Recipe shared successfully!');
+				}
+
                 document.getElementById('recipeForm').reset();
+				resetFormToAddMode();
                 document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
                 document.getElementById('file-label').classList.remove('has-file');
                 
@@ -2338,6 +2345,7 @@
                 renderTags();
 
                 await fetchAndDisplayRecipes();
+				resetFormToAddMode();
 
             } catch (error) {
                 console.error('Error sharing recipe:', error);
@@ -2404,12 +2412,11 @@
 			}
 		}
 
-		// Edit Recipe Function
 		function editRecipe() {
 			const recipe = allRecipes.find(r => r._id === currentRecipeId);
 			if (!recipe) return;
 			
-			// Fill form with recipe data
+			// Fill basic form data
 			document.getElementById('recipeTitle').value = recipe.title;
 			document.getElementById('recipeCategory').value = recipe.category;
 			document.getElementById('cookingTime').value = recipe.cookingTime;
@@ -2419,16 +2426,108 @@
 			recipeTags = recipe.tags || [];
 			renderTags();
 			
+			// Fill ingredients with groups
+			const ingredientsContainer = document.getElementById('ingredientsContainer');
+			ingredientsContainer.innerHTML = ''; // Clear existing
+			
+			if (recipe.ingredientGroups && recipe.ingredientGroups.length > 0) {
+				// If recipe has ingredient groups
+				recipe.ingredientGroups.forEach((group, groupIndex) => {
+					const groupDiv = document.createElement('div');
+					groupDiv.className = 'ingredient-group';
+					groupDiv.setAttribute('data-group', groupIndex);
+					
+					groupDiv.innerHTML = `
+						<div class="group-header">
+							<input type="text" class="group-name" value="${group.name || ''}" placeholder="Group name (optional)" />
+							<button type="button" class="remove-group-btn" onclick="removeIngredientGroup(this)">Remove Group</button>
+						</div>
+					`;
+					
+					group.ingredients.forEach(ing => {
+						const ingredientItem = document.createElement('div');
+						ingredientItem.className = 'ingredient-item';
+						ingredientItem.innerHTML = `
+							<input type="text" value="${ing.name}" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+							<input type="text" value="${ing.amount}" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+							<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+						`;
+						groupDiv.appendChild(ingredientItem);
+					});
+					
+					ingredientsContainer.appendChild(groupDiv);
+				});
+			} else {
+				// If recipe has simple ingredients (backward compatibility)
+				const groupDiv = document.createElement('div');
+				groupDiv.className = 'ingredient-group';
+				groupDiv.setAttribute('data-group', '0');
+				
+				groupDiv.innerHTML = `
+					<div class="group-header">
+						<input type="text" class="group-name" placeholder="Group name (optional)" />
+						<button type="button" class="remove-group-btn" onclick="removeIngredientGroup(this)">Remove Group</button>
+					</div>
+				`;
+				
+				recipe.ingredients.forEach(ing => {
+					const ingredientItem = document.createElement('div');
+					ingredientItem.className = 'ingredient-item';
+					ingredientItem.innerHTML = `
+						<input type="text" value="${ing.name}" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+						<input type="text" value="${ing.amount}" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+						<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+					`;
+					groupDiv.appendChild(ingredientItem);
+				});
+				
+				ingredientsContainer.appendChild(groupDiv);
+			}
+			
+			// Fill instructions
+			const instructionsContainer = document.getElementById('instructionsContainer');
+			instructionsContainer.innerHTML = ''; // Clear existing
+			
+			recipe.instructions.forEach((instruction, index) => {
+				const instructionItem = document.createElement('div');
+				instructionItem.className = 'instruction-item';
+				instructionItem.innerHTML = `
+					<input type="text" value="${instruction}" placeholder="${translations[currentLang]['step-placeholder']} ${index + 1}..." required>
+					<button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+				`;
+				instructionsContainer.appendChild(instructionItem);
+			});
+			
+			// Clear image input (can't pre-fill file inputs for security reasons)
+			document.getElementById('recipeImage').value = '';
+			const fileLabel = document.getElementById('file-label');
+			if (recipe.imageUrl) {
+				fileLabel.textContent = '✅ Current image will be kept (select new to replace)';
+				fileLabel.classList.add('has-file');
+			} else {
+				fileLabel.textContent = translations[currentLang]['file-label'];
+				fileLabel.classList.remove('has-file');
+			}
+			
+			// Change submit button to update mode with different color
+			const submitBtn = document.getElementById('submit-btn');
+			submitBtn.textContent = currentLang === 'he' ? 'עדכן מתכון' : 'Update Recipe';
+			submitBtn.setAttribute('data-editing', currentRecipeId);
+			submitBtn.style.background = 'linear-gradient(135deg, #ed8936, #dd6b20)'; // Orange gradient
+			
 			// Close modal and scroll to form
 			closeModal();
 			document.querySelector('.recipe-form').scrollIntoView({ behavior: 'smooth' });
 			
-			// Change submit button to update mode
-			const submitBtn = document.getElementById('submit-btn');
-			submitBtn.textContent = 'Update Recipe';
-			submitBtn.setAttribute('data-editing', currentRecipeId);
+			showNotification('Recipe loaded for editing!', 'info');
 		}
 
+		function resetFormToAddMode() {
+			const submitBtn = document.getElementById('submit-btn');
+			submitBtn.textContent = currentLang === 'he' ? 'שתף מתכון' : 'Share Recipe';
+			submitBtn.removeAttribute('data-editing');
+			submitBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; // Original blue gradient
+		}
 		// Tags Update Function
 		let modalRecipeTags = [];
 
