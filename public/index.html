@@ -4,7 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Share - Share Your Culinary Creations</title>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
+		const firebaseConfig = {
+		  apiKey: "AIzaSyCAq0G_8fJvattLuB2kV1bKMtQqtNsTsJg",
+		  authDomain: "recipe-share-91b05.firebaseapp.com",
+		  projectId: "recipe-share-91b05",
+		  storageBucket: "recipe-share-91b05.firebasestorage.app",
+		  messagingSenderId: "211923488805",
+		  appId: "1:211923488805:web:ca9cd64974a7ac2f126fcc",
+		  measurementId: "G-GRVCSG5MD8"
+		};
+
+
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+		const auth = firebase.auth();
+		const db = firebase.firestore();
+
+		// Current user state
+		let currentUser = null;
+
+		// Auth state listener
+		auth.onAuthStateChanged(function(user) {
+			currentUser = user;
+			updateAuthUI();
+			if (user) {
+				console.log('User signed in:', user.displayName);
+			} else {
+				console.log('User signed out');
+			}
+		});
+
+		// Auth functions
+		function signIn() {
+			const provider = new firebase.auth.GoogleAuthProvider();
+			auth.signInWithPopup(provider)
+				.then((result) => {
+					showNotification('Signed in successfully!');
+				})
+				.catch((error) => {
+					console.error('Sign in error:', error);
+					showNotification('Sign in failed: ' + error.message, 'error');
+				});
+		}
+
+		function signOut() {
+			auth.signOut()
+				.then(() => {
+					showNotification('Signed out successfully!');
+				})
+				.catch((error) => {
+					console.error('Sign out error:', error);
+				});
+		}
+
+		function updateAuthUI() {
+			const userSection = document.getElementById('userSection');
+			const signInBtn = document.getElementById('signInBtn');
+			const userAvatar = document.getElementById('userAvatar');
+			const userName = document.getElementById('userName');
+
+			if (currentUser) {
+				// User is signed in
+				userSection.style.display = 'flex';
+				signInBtn.style.display = 'none';
+				userAvatar.src = currentUser.photoURL || '/default-avatar.png';
+				userName.textContent = currentUser.displayName || 'User';
+			} else {
+				// User is signed out
+				userSection.style.display = 'none';
+				signInBtn.style.display = 'block';
+			}
+		}
+
         * {
             margin: 0;
             padding: 0;
@@ -1183,10 +1258,6 @@
 
             .language-toggle {
                 position: static;
-                margin-bottom: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
             }
 
             .search-filter-bar {
@@ -1226,14 +1297,78 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
+
+		.header-controls {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			display: flex;
+			align-items: center;
+			gap: 15px;
+			z-index: 1000;
+		}
+
+		.user-section {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: rgba(255,255,255,0.2);
+			padding: 8px 15px;
+			border-radius: 25px;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255,255,255,0.3);
+		}
+
+		.user-avatar {
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			border: 2px solid white;
+		}
+
+		.auth-btn {
+			background: rgba(255,255,255,0.2);
+			border: 1px solid rgba(255,255,255,0.3);
+			color: white;
+			padding: 8px 16px;
+			border-radius: 25px;
+			cursor: pointer;
+			backdrop-filter: blur(10px);
+			transition: all 0.3s ease;
+			font-weight: 600;
+		}
+
+		.auth-btn:hover {
+			background: rgba(255,255,255,0.3);
+			transform: translateY(-2px);
+		}
+
+		@media (max-width: 768px) {
+			.header-controls {
+				position: static;
+				justify-content: center;
+				margin-bottom: 20px;
+				flex-wrap: wrap;
+			}
+		}
     </style>
 </head>
 <body>
     <div class="container">
-        <button class="language-toggle" onclick="toggleLanguage()">
-            <span class="flag-icon flag-israel" id="flag-icon"></span>
-            <span id="lang-toggle-text">עברית</span>
-        </button>
+		<div class="header-controls">
+			<div class="user-section" id="userSection" style="display: none;">
+				<img id="userAvatar" class="user-avatar" src="" alt="User">
+				<span id="userName">User Name</span>
+				<button class="auth-btn" onclick="signOut()">Sign Out</button>
+			</div>
+			<button class="auth-btn" id="signInBtn" onclick="signIn()" style="display: block;">
+				Sign In with Google
+			</button>
+			<button class="language-toggle" onclick="toggleLanguage()">
+				<span class="flag-icon flag-israel" id="flag-icon"></span>
+				<span id="lang-toggle-text">עברית</span>
+			</button>
+		</div>
 
         <div class="header">
             <h1 id="site-title">Recipe Share</h1>
