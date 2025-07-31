@@ -1306,7 +1306,7 @@
 							</div>
 						</div>
 					</div>
-					<button type="button" class="add-btn" onclick="addIngredient()" id="add-ingredient-btn">+ Add Ingredient</button>
+					<button type="button" class="add-btn" onclick="addIngredient()" id="add-ingredient-btn" style="display: none;">+ Add Ingredient</button>
 					<button type="button" class="add-btn secondary" onclick="addIngredientGroup()">+ Add Ingredient Group</button>
                     </div>
 
@@ -1318,7 +1318,7 @@
                                 <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
                             </div>
                         </div>
-                        <button type="button" class="add-btn" onclick="addInstruction()" id="add-instruction-btn">+ Add Step</button>
+                        <button type="button" class="add-btn" onclick="addInstruction()" id="add-instruction-btn" style="display: none;">+ Add Step</button>
                     </div>
 
                     <div class="form-group">
@@ -1963,7 +1963,7 @@
             instructionItem.className = 'instruction-item';
             const stepNumber = container.children.length + 1;
             instructionItem.innerHTML = `
-                <input type="text" placeholder="${translations[currentLang]['step-placeholder']} ${stepNumber}..." required>
+                <input type="text" placeholder="${translations[currentLang]['step-placeholder']} ${stepNumber}...">
                 <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
             `;
             container.appendChild(instructionItem);
@@ -2366,8 +2366,8 @@
 							<button type="button" class="remove-group-btn" onclick="removeIngredientGroup(this)">Remove Group</button>
 						</div>
 						<div class="ingredient-item">
-							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
-							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}">
+							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}">
 							<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
 						</div>
 					</div>
@@ -2377,7 +2377,7 @@
 				const instructionsContainer = document.getElementById('instructionsContainer');
 				instructionsContainer.innerHTML = `
 					<div class="instruction-item">
-						<input type="text" placeholder="${translations[currentLang]['step-placeholder']} 1..." required>
+						<input type="text" placeholder="${translations[currentLang]['step-placeholder']} 1...">
 						<button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
 					</div>
 				`;
@@ -2610,8 +2610,8 @@
 						const newIngredientItem = document.createElement('div');
 						newIngredientItem.className = 'ingredient-item';
 						newIngredientItem.innerHTML = `
-							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
-							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}">
+							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}">
 							<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
 						`;
 						ingredientGroup.appendChild(newIngredientItem);
