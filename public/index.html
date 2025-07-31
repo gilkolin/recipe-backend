@@ -1300,8 +1300,8 @@
 								<button type="button" class="remove-group-btn" onclick="removeIngredientGroup(this)">Remove Group</button>
 							</div>
 							<div class="ingredient-item">
-								<input type="text" placeholder="Ingredient name..." required>
-								<input type="text" placeholder="Amount..." required>
+								<input type="text" placeholder="Ingredient name...">
+								<input type="text" placeholder="Amount...">
 								<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
 							</div>
 						</div>
@@ -1314,7 +1314,7 @@
                         <label id="instructions-label">Instructions</label>
                         <div class="instructions-container" id="instructionsContainer">
                             <div class="instruction-item">
-                                <input type="text" placeholder="Step 1..." required>
+                                <input type="text" placeholder="Step 1...">
                                 <button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
                             </div>
                         </div>
@@ -2303,22 +2303,36 @@
             formData.append('image', document.getElementById('recipeImage').files[0]);
 
             const ingredients = [];
-            document.querySelectorAll('.ingredient-item').forEach(item => {
-                const inputs = item.querySelectorAll('input');
-                if (inputs[0].value && inputs[1].value) {
-                    ingredients.push({ name: inputs[0].value, amount: inputs[1].value });
-                }
-            });
+			document.querySelectorAll('.ingredient-item').forEach(item => {
+				const inputs = item.querySelectorAll('input');
+				// Only add if both fields have values (ignore empty ones)
+				if (inputs[0].value.trim() && inputs[1].value.trim()) {
+					ingredients.push({ name: inputs[0].value.trim(), amount: inputs[1].value.trim() });
+				}
+			});
+			
             formData.append('ingredients', JSON.stringify(ingredients));
 
-            const instructions = [];
-            document.querySelectorAll('.instruction-item input').forEach(input => {
-                if (input.value) {
-                    instructions.push(input.value);
-                }
-            });
+			const instructions = [];
+			document.querySelectorAll('.instruction-item input').forEach(input => {
+				// Only add non-empty instructions
+				if (input.value.trim()) {
+					instructions.push(input.value.trim());
+				}
+			});
             formData.append('instructions', JSON.stringify(instructions));
-            
+            if (ingredients.length === 0) {
+				showNotification('Please add at least one ingredient', 'error');
+				showLoading(false);
+				return;
+			}
+
+			if (instructions.length === 0) {
+				showNotification('Please add at least one instruction step', 'error');
+				showLoading(false);
+				return;
+			}
+
             try {
                 const response = await fetch('/api/recipes', {
                     method: 'POST',
@@ -2343,6 +2357,33 @@
                 
                 recipeTags = [];
                 renderTags();
+
+				const ingredientsContainer = document.getElementById('ingredientsContainer');
+				ingredientsContainer.innerHTML = `
+					<div class="ingredient-group" data-group="0">
+						<div class="group-header">
+							<input type="text" class="group-name" placeholder="Group name (optional)" />
+							<button type="button" class="remove-group-btn" onclick="removeIngredientGroup(this)">Remove Group</button>
+						</div>
+						<div class="ingredient-item">
+							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+							<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+						</div>
+					</div>
+				`;
+
+				// Reset instructions to single item
+				const instructionsContainer = document.getElementById('instructionsContainer');
+				instructionsContainer.innerHTML = `
+					<div class="instruction-item">
+						<input type="text" placeholder="${translations[currentLang]['step-placeholder']} 1..." required>
+						<button type="button" class="remove-btn" onclick="removeInstruction(this)">×</button>
+					</div>
+				`;
+
+				// Re-attach auto-add listeners
+				attachAutoAddListeners();
 
                 await fetchAndDisplayRecipes();
 				resetFormToAddMode();
@@ -2384,6 +2425,7 @@
             initializeTagsInput();
             initializeRatingSystem();
             fetchAndDisplayRecipes();
+			attachAutoAddListeners();
         });
 		function addIngredientGroup() {
 			const container = document.getElementById('ingredientsContainer');
@@ -2549,6 +2591,44 @@
 				showNotification('Failed to update tags', 'error');
 			})
 			.finally(() => showLoading(false));
+		}
+		
+		function attachAutoAddListeners() {
+			// Auto-add ingredient when user types in the last ingredient field
+			document.addEventListener('input', function(e) {
+				if (e.target.matches('.ingredient-item input')) {
+					const ingredientItem = e.target.closest('.ingredient-item');
+					const ingredientGroup = ingredientItem.closest('.ingredient-group');
+					const allInputsInItem = ingredientItem.querySelectorAll('input');
+					const isLastItem = ingredientItem === ingredientGroup.lastElementChild;
+					
+					// Check if both inputs in this item have values
+					const bothFieldsFilled = Array.from(allInputsInItem).every(input => input.value.trim() !== '');
+					
+					if (isLastItem && bothFieldsFilled) {
+						// Add new ingredient to the same group
+						const newIngredientItem = document.createElement('div');
+						newIngredientItem.className = 'ingredient-item';
+						newIngredientItem.innerHTML = `
+							<input type="text" placeholder="${translations[currentLang]['ingredient-placeholder']}" required>
+							<input type="text" placeholder="${translations[currentLang]['amount-placeholder']}" required>
+							<button type="button" class="remove-btn" onclick="removeIngredient(this)">×</button>
+						`;
+						ingredientGroup.appendChild(newIngredientItem);
+					}
+				}
+				
+				// Auto-add instruction when user types in the last instruction field
+				if (e.target.matches('.instruction-item input')) {
+					const instructionItem = e.target.closest('.instruction-item');
+					const instructionsContainer = document.getElementById('instructionsContainer');
+					const isLastItem = instructionItem === instructionsContainer.lastElementChild;
+					
+					if (isLastItem && e.target.value.trim() !== '') {
+						addInstruction();
+					}
+				}
+			});
 		}
     </script>
 </body>
