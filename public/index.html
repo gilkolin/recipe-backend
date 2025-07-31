@@ -8,78 +8,6 @@
 	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-		const firebaseConfig = {
-		  apiKey: "AIzaSyCAq0G_8fJvattLuB2kV1bKMtQqtNsTsJg",
-		  authDomain: "recipe-share-91b05.firebaseapp.com",
-		  projectId: "recipe-share-91b05",
-		  storageBucket: "recipe-share-91b05.firebasestorage.app",
-		  messagingSenderId: "211923488805",
-		  appId: "1:211923488805:web:ca9cd64974a7ac2f126fcc",
-		  measurementId: "G-GRVCSG5MD8"
-		};
-
-
-		// Initialize Firebase
-		firebase.initializeApp(firebaseConfig);
-		const auth = firebase.auth();
-		const db = firebase.firestore();
-
-		// Current user state
-		let currentUser = null;
-
-		// Auth state listener
-		auth.onAuthStateChanged(function(user) {
-			currentUser = user;
-			updateAuthUI();
-			if (user) {
-				console.log('User signed in:', user.displayName);
-			} else {
-				console.log('User signed out');
-			}
-		});
-
-		// Auth functions
-		function signIn() {
-			const provider = new firebase.auth.GoogleAuthProvider();
-			auth.signInWithPopup(provider)
-				.then((result) => {
-					showNotification('Signed in successfully!');
-				})
-				.catch((error) => {
-					console.error('Sign in error:', error);
-					showNotification('Sign in failed: ' + error.message, 'error');
-				});
-		}
-
-		function signOut() {
-			auth.signOut()
-				.then(() => {
-					showNotification('Signed out successfully!');
-				})
-				.catch((error) => {
-					console.error('Sign out error:', error);
-				});
-		}
-
-		function updateAuthUI() {
-			const userSection = document.getElementById('userSection');
-			const signInBtn = document.getElementById('signInBtn');
-			const userAvatar = document.getElementById('userAvatar');
-			const userName = document.getElementById('userName');
-
-			if (currentUser) {
-				// User is signed in
-				userSection.style.display = 'flex';
-				signInBtn.style.display = 'none';
-				userAvatar.src = currentUser.photoURL || '/default-avatar.png';
-				userName.textContent = currentUser.displayName || 'User';
-			} else {
-				// User is signed out
-				userSection.style.display = 'none';
-				signInBtn.style.display = 'block';
-			}
-		}
-
         * {
             margin: 0;
             padding: 0;
@@ -1369,7 +1297,6 @@
 				<span id="lang-toggle-text">עברית</span>
 			</button>
 		</div>
-<button onclick="console.log('Firebase:', firebase); console.log('Auth:', firebase.auth())">Test Firebase</button>
         <div class="header">
             <h1 id="site-title">Recipe Share</h1>
             <p id="site-subtitle">Share Your Culinary Creations with the World</p>
@@ -1609,6 +1536,78 @@
     </div>
 
     <script>
+		const firebaseConfig = {
+		  apiKey: "AIzaSyCAq0G_8fJvattLuB2kV1bKMtQqtNsTsJg",
+		  authDomain: "recipe-share-91b05.firebaseapp.com",
+		  projectId: "recipe-share-91b05",
+		  storageBucket: "recipe-share-91b05.firebasestorage.app",
+		  messagingSenderId: "211923488805",
+		  appId: "1:211923488805:web:ca9cd64974a7ac2f126fcc",
+		  measurementId: "G-GRVCSG5MD8"
+		};
+
+
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+		const auth = firebase.auth();
+		const db = firebase.firestore();
+
+		// Current user state
+		let currentUser = null;
+
+		// Auth state listener
+		auth.onAuthStateChanged(function(user) {
+			currentUser = user;
+			updateAuthUI();
+			if (user) {
+				console.log('User signed in:', user.displayName);
+			} else {
+				console.log('User signed out');
+			}
+		});
+
+		// Auth functions
+		function signIn() {
+			const provider = new firebase.auth.GoogleAuthProvider();
+			auth.signInWithPopup(provider)
+				.then((result) => {
+					showNotification('Signed in successfully!');
+				})
+				.catch((error) => {
+					console.error('Sign in error:', error);
+					showNotification('Sign in failed: ' + error.message, 'error');
+				});
+		}
+
+		function signOut() {
+			auth.signOut()
+				.then(() => {
+					showNotification('Signed out successfully!');
+				})
+				.catch((error) => {
+					console.error('Sign out error:', error);
+				});
+		}
+
+		function updateAuthUI() {
+			const userSection = document.getElementById('userSection');
+			const signInBtn = document.getElementById('signInBtn');
+			const userAvatar = document.getElementById('userAvatar');
+			const userName = document.getElementById('userName');
+
+			if (currentUser) {
+				// User is signed in
+				userSection.style.display = 'flex';
+				signInBtn.style.display = 'none';
+				userAvatar.src = currentUser.photoURL || '/default-avatar.png';
+				userName.textContent = currentUser.displayName || 'User';
+			} else {
+				// User is signed out
+				userSection.style.display = 'none';
+				signInBtn.style.display = 'block';
+			}
+		}
+
         const translations = {
             en: {
                 'site-title': 'Recipe Share',
