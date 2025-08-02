@@ -145,42 +145,43 @@ admin.initializeApp({
   // databaseURL: "https://your-project-id-default-rtdb.firebaseio.com"
 });
 
+
 // Middleware to verify Firebase token
 async function authenticateUser(req, res, next) {
-    try {
-        const token = req.headers.authorization?.split('Bearer ')[1];
-        if (token) {
-            const decodedToken = await admin.auth().verifyIdToken(token);
-            req.user = decodedToken;
-        }
+//    try {
+  //      const token = req.headers.authorization?.split('Bearer ')[1];
+   //     if (token) {
+     //       const decodedToken = await admin.auth().verifyIdToken(token);
+       //     req.user = decodedToken;
+        //}
         next();
-    } catch (error) {
-        console.error('Auth error:', error);
-        next(); // Continue without user for public endpoints
+    //} catch (error) {
+      //  console.error('Auth error:', error);
+        //next(); // Continue without user for public endpoints
     }
 }
 
 // Middleware to check recipe ownership
 async function checkRecipeOwnership(req, res, next) {
-    try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Authentication required' });
-        }
+  //  try {
+    //    if (!req.user) {
+      //      return res.status(401).json({ message: 'Authentication required' });
+        //}
         
-        const recipe = await Recipe.findById(req.params.id); // Adjust based on your DB
-        if (!recipe) {
-            return res.status(404).json({ message: 'Recipe not found' });
-        }
+        //const recipe = await Recipe.findById(req.params.id); // Adjust based on your DB
+        //if (!recipe) {
+          //  return res.status(404).json({ message: 'Recipe not found' });
+        //}
         
-        if (recipe.createdBy !== req.user.uid) {
-            return res.status(403).json({ message: 'You can only modify your own recipes' });
-        }
+        //if (recipe.createdBy !== req.user.uid) {
+          //  return res.status(403).json({ message: 'You can only modify your own recipes' });
+        //}
         
-        req.recipe = recipe;
+        //req.recipe = recipe;
         next();
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
-    }
+    //} catch (error) {
+      //  res.status(500).json({ message: 'Server error' });
+    //}
 }
 
 
