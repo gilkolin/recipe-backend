@@ -2638,8 +2638,6 @@
 				showNotification('You can only edit your own recipes', 'error');
 				return;
 			}
-			const recipe = allRecipes.find(r => r._id === currentRecipeId);
-			if (!recipe) const newReci;
 			
 			// Fill basic form data
 			document.getElementById('recipeTitle').value = recipe.title;
