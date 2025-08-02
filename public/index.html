@@ -1286,10 +1286,10 @@
 				<span id="userName">User Name</span>
 				<button class="auth-btn" onclick="signOut()">Sign Out</button>
 			</div>
-			<button class="auth-btn" id="signInBtn" onclick="signIn()" style="display: block;">
+			<button class="auth-btn" id="signInBtn" style="display: block;">
 				Sign In with Google
 			</button>
-			<button class="language-toggle" onclick="toggleLanguage()">
+			<button class="language-toggle" id="languageToggle">
 				<span class="flag-icon flag-israel" id="flag-icon"></span>
 				<span id="lang-toggle-text">עברית</span>
 			</button>
@@ -2591,6 +2591,9 @@
             initializeRatingSystem();
             fetchAndDisplayRecipes();
 			attachAutoAddListeners();
+			
+			document.getElementById('signInBtn').addEventListener('click', signIn);
+			document.getElementById('languageToggle').addEventListener('click', toggleLanguage);
         });
 		function addIngredientGroup() {
 			const container = document.getElementById('ingredientsContainer');
