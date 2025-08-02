@@ -59,8 +59,6 @@ const uploadToCloudinary = (buffer, filename) => {
         ).end(buffer);
     });
 };
-
-// UPDATED Recipe schema with categories and tags
 const recipeSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -113,11 +111,23 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // 🔥 ADD THESE USER OWNERSHIP FIELDS
+    createdBy: {
+        type: String,
+        required: true // Firebase UID
+    },
+    createdByName: {
+        type: String,
+        default: 'Anonymous'
+    },
+    createdByEmail: {
+        type: String,
+        default: ''
+    },
     createdAt: {
         type: Date,
         default: Date.now
     },
-
     // 🔥 Ratings feature
     ratings: [{
         rating: {
@@ -139,7 +149,6 @@ const recipeSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-
     // 💬 Comments feature
     comments: [{
         text: {
