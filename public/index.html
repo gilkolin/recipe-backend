@@ -2285,6 +2285,9 @@
                 `<span class="comment-indicator" title="${recipe.commentCount} comments">💬</span>` : '';
 			console.log(`Recipe ${recipe.title}: commentCount = ${recipe.commentCount}`); // Add this line
 			
+			const deleteButton = (currentUser && recipe.createdBy === currentUser.uid) 
+				? `<button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>`
+				: '';
             card.innerHTML = `
                 ${imageHtml}
                 <button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
@@ -2313,32 +2316,59 @@
             return card;
         }
         
-        async function deleteRecipe(recipeId, event) {
-            event.stopPropagation();
-            
-            if (!confirm('Are you sure you want to delete this recipe?')) return;
+		async function getAuthHeaders() {
+			if (currentUser) {
+				try {
+					const token = await currentUser.getIdToken();
+					return {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					};
+				} catch (error) {
+					console.error('Error getting auth token:', error);
+				}
+			}
+			return { 'Content-Type': 'application/json' };
+		}
 
-            showLoading(true);
-            
-            try {
-                const response = await fetch(`/api/recipes/${recipeId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    showNotification('Recipe deleted successfully!');
-                    await fetchAndDisplayRecipes();
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to delete recipe');
-                }
-            } catch (error) {
-                console.error('Error deleting recipe:', error);
-                showNotification(error.message || 'Failed to delete recipe', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
+        async function deleteRecipe(recipeId, event) {
+			event.stopPropagation();
+			
+			if (!currentUser) {
+				showNotification('Please sign in to delete recipes', 'error');
+				return;
+			}
+			
+			const recipe = allRecipes.find(r => r._id === recipeId);
+			if (!recipe || recipe.createdBy !== currentUser.uid) {
+				showNotification('You can only delete your own recipes', 'error');
+				return;
+			}
+			
+			if (!confirm('Are you sure you want to delete this recipe?')) return;
+
+			showLoading(true);
+			
+			try {
+				const response = await fetch(`/api/recipes/${recipeId}`, {
+					method: 'DELETE',
+					headers: await getAuthHeaders()
+				});
+				
+				if (response.ok) {
+					showNotification('Recipe deleted successfully!');
+					await fetchAndDisplayRecipes();
+				} else {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to delete recipe');
+				}
+			} catch (error) {
+				console.error('Error deleting recipe:', error);
+				showNotification(error.message || 'Failed to delete recipe', 'error');
+			} finally {
+				showLoading(false);
+			}
+		}
 
         function openModal(recipeId) {
             const recipe = allRecipes.find(r => r._id === recipeId);
@@ -2429,6 +2459,10 @@
 			const url = isEditing ? `/api/recipes/${isEditing}` : '/api/recipes';			
 
             const formData = new FormData();
+			if (currentUser) {
+			formData.append('createdBy', currentUser.uid);
+			formData.append('createdByName', currentUser.displayName || '');
+			formData.append('createdByEmail', currentUser.email || '');
             formData.append('title', document.getElementById('recipeTitle').value);
             formData.append('category', document.getElementById('recipeCategory').value);
             formData.append('cookingTime', document.getElementById('cookingTime').value);
@@ -2589,8 +2623,18 @@
 		}
 
 		function editRecipe() {
+			if (!currentUser) {
+				showNotification('Please sign in to edit recipes', 'error');
+				return;
+			}
+			
 			const recipe = allRecipes.find(r => r._id === currentRecipeId);
-			if (!recipe) return;
+			if (!recipe || recipe.createdBy !== currentUser.uid) {
+				showNotification('You can only edit your own recipes', 'error');
+				return;
+			}
+			const recipe = allRecipes.find(r => r._id === currentRecipeId);
+			if (!recipe) const newReci;
 			
 			// Fill basic form data
 			document.getElementById('recipeTitle').value = recipe.title;

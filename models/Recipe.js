@@ -26,7 +26,11 @@ const recipeSchema = new mongoose.Schema({
         text: { type: String, required: true },
         author: { type: String, default: 'Anonymous' },
         createdAt: { type: Date, default: Date.now }
-    }]
+    }],
+	createdBy: String,        // Firebase UID
+    createdByName: String,    // Display name
+    createdByEmail: String,   // Email
+    createdAt: Date
 }, { timestamps: true });
 
 // Add indexes for better performance

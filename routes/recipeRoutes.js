@@ -251,7 +251,11 @@ router.post('/', upload.single('image'), async (req, res) => {
 				amount: ing.amount?.trim()
 			})),
 			instructions: parsedInstructions.map(inst => inst.trim()),
-			imageUrl
+			imageUrl,
+			createdBy: req.user?.uid, // from auth middleware
+			createdByName: req.user?.displayName,
+			createdByEmail: req.user?.email,
+			createdAt: new Date()
 		});
 
         const savedRecipe = await newRecipe.save();
@@ -440,6 +444,7 @@ router.post('/:id/comments', async (req, res) => {
     res.status(500).json({ message: 'Failed to add comment' });
   }
 });
+
 
 router.post('/:id/ratings', async (req, res) => {
   try {
