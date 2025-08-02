@@ -2453,30 +2453,34 @@
 
 			const isEditing = document.getElementById('submit-btn').getAttribute('data-editing');
 			const method = isEditing ? 'PUT' : 'POST';
-			const url = isEditing ? `/api/recipes/${isEditing}` : '/api/recipes';			
+			const url = isEditing ? `/api/recipes/${isEditing}` : '/api/recipes';
 
-            const formData = new FormData();
+			const formData = new FormData();
+			
+			// Only add user info if user is signed in
 			if (currentUser) {
-			formData.append('createdBy', currentUser.uid);
-			formData.append('createdByName', currentUser.displayName || '');
-			formData.append('createdByEmail', currentUser.email || '');
-            formData.append('title', document.getElementById('recipeTitle').value);
-            formData.append('category', document.getElementById('recipeCategory').value);
-            formData.append('cookingTime', document.getElementById('cookingTime').value);
-            formData.append('difficulty', document.getElementById('difficulty').value);
-            formData.append('tags', JSON.stringify(recipeTags));
-            formData.append('image', document.getElementById('recipeImage').files[0]);
+				formData.append('createdBy', currentUser.uid);
+				formData.append('createdByName', currentUser.displayName || '');
+				formData.append('createdByEmail', currentUser.email || '');
+			}
+			
+			formData.append('title', document.getElementById('recipeTitle').value);
+			formData.append('category', document.getElementById('recipeCategory').value);
+			formData.append('cookingTime', document.getElementById('cookingTime').value);
+			formData.append('difficulty', document.getElementById('difficulty').value);
+			formData.append('tags', JSON.stringify(recipeTags));
+			formData.append('image', document.getElementById('recipeImage').files[0]);
 
-            const ingredients = [];
+			const ingredients = [];
 			document.querySelectorAll('.ingredient-item').forEach(item => {
 				const inputs = item.querySelectorAll('input');
 				// Only add if both fields have values (ignore empty ones)
-				if (inputs[0].value.trim() && inputs[1].value.trim()) {
+				if (inputs[0] && inputs[1] && inputs[0].value.trim() && inputs[1].value.trim()) {
 					ingredients.push({ name: inputs[0].value.trim(), amount: inputs[1].value.trim() });
 				}
 			});
 			
-            formData.append('ingredients', JSON.stringify(ingredients));
+			formData.append('ingredients', JSON.stringify(ingredients));
 
 			const instructions = [];
 			document.querySelectorAll('.instruction-item input').forEach(input => {
@@ -2485,8 +2489,10 @@
 					instructions.push(input.value.trim());
 				}
 			});
-            formData.append('instructions', JSON.stringify(instructions));
-            if (ingredients.length === 0) {
+			formData.append('instructions', JSON.stringify(instructions));
+			
+			// Validation
+			if (ingredients.length === 0) {
 				showNotification('Please add at least one ingredient', 'error');
 				showLoading(false);
 				return;
@@ -2498,16 +2504,16 @@
 				return;
 			}
 
-            try {
-                const response = await fetch('/api/recipes', {
-                    method: 'POST',
-                    body: formData
-                });
+			try {
+				const response = await fetch(url, {  // Use the correct URL variable
+					method: method,  // Use the correct method variable
+					body: formData
+				});
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to save recipe');
-                }
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to save recipe');
+				}
 
 				if (isEditing) {
 					showNotification('Recipe updated successfully!');
@@ -2515,13 +2521,13 @@
 					showNotification('Recipe shared successfully!');
 				}
 
-                document.getElementById('recipeForm').reset();
+				document.getElementById('recipeForm').reset();
 				resetFormToAddMode();
-                document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
-                document.getElementById('file-label').classList.remove('has-file');
-                
-                recipeTags = [];
-                renderTags();
+				document.getElementById('file-label').textContent = translations[currentLang]['file-label'];
+				document.getElementById('file-label').classList.remove('has-file');
+				
+				recipeTags = [];
+				renderTags();
 
 				const ingredientsContainer = document.getElementById('ingredientsContainer');
 				ingredientsContainer.innerHTML = `
@@ -2550,16 +2556,15 @@
 				// Re-attach auto-add listeners
 				attachAutoAddListeners();
 
-                await fetchAndDisplayRecipes();
-				resetFormToAddMode();
+				await fetchAndDisplayRecipes();
 
-            } catch (error) {
-                console.error('Error sharing recipe:', error);
-                showNotification(error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        });
+			} catch (error) {
+				console.error('Error sharing recipe:', error);
+				showNotification(error.message, 'error');
+			} finally {
+				showLoading(false);
+			}
+		});
 
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
