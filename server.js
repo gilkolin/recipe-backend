@@ -135,12 +135,14 @@ mongoose.connect(process.env.MONGODB_URI)
     })
     .catch(err => console.error('DB connection error:', err));
 
-const admin = require('firebase-admin');
 
-// Initialize Firebase Admin
+const admin = require('firebase-admin');
+const serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
+
 admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    // or use service account key
+  credential: admin.credential.cert(serviceAccount),
+  // Add your database URL if using Realtime Database
+  // databaseURL: "https://your-project-id-default-rtdb.firebaseio.com"
 });
 
 // Middleware to verify Firebase token
