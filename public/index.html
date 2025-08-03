@@ -2507,7 +2507,8 @@
 			try {
 				const response = await fetch(url, {  // Use the correct URL variable
 					method: method,  // Use the correct method variable
-					body: formData
+					body: formData,
+					headers: await getAuthHeaders() 
 				});
 
 				if (!response.ok) {
