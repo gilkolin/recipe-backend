@@ -261,9 +261,10 @@ router.post('/', upload.single('image'), async (req, res) => {
 			})),
 			instructions: parsedInstructions.map(inst => inst.trim()),
 			imageUrl,
-			createdBy: req.user?.uid, // from auth middleware
-			createdByName: req.user?.displayName,
-			createdByEmail: req.user?.email,
+			// Use req.user if available, otherwise fall back to form data
+			createdBy: req.user?.uid || createdBy,
+			createdByName: req.user?.displayName || createdByName,
+			createdByEmail: req.user?.email || createdByEmail,
 			createdAt: new Date()
 		});
 
