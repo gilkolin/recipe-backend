@@ -126,6 +126,86 @@ app.get('/api/recipes/:id/comments', async (req, res) => {
     }
 });
 
+
+router.post('/', upload.single('image'), async (req, res) => {
+    try {
+        console.log('=== POST DEBUGGING START ===');
+        console.log('File received:', !!req.file);
+        console.log('Request body:', req.body);
+        console.log('=== POST DEBUGGING END ===');
+
+        const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
+
+        // Extract user data from form
+        const formCreatedBy = req.body.createdBy;
+        const formCreatedByName = req.body.createdByName;
+        const formCreatedByEmail = req.body.createdByEmail;
+
+        // Validation
+        if (!title || !category || !ingredients || !instructions) {
+            return res.status(400).json({ 
+                message: 'Missing required fields: title, category, ingredients, and instructions are required' 
+            });
+        }
+
+        // Parse JSON data
+        let parsedIngredients, parsedInstructions, parsedTags;
+        
+        try {
+            parsedIngredients = ingredients ? JSON.parse(ingredients) : [];
+            parsedInstructions = instructions ? JSON.parse(instructions) : [];
+            parsedTags = tags ? JSON.parse(tags) : [];
+        } catch (parseError) {
+            return res.status(400).json({ 
+                message: 'Invalid JSON format for ingredients, instructions, or tags' 
+            });
+        }
+
+        // Upload image to Cloudinary if present
+        let imageUrl = null;
+        if (req.file) {
+            try {
+                const filename = req.file.originalname.split('.')[0];
+                imageUrl = await uploadToCloudinary(req.file.buffer, filename);
+            } catch (uploadError) {
+                console.error('Error uploading to Cloudinary:', uploadError);
+                return res.status(500).json({ 
+                    message: 'Failed to upload image' 
+                });
+            }
+        }
+
+        const newRecipe = new Recipe({
+            title: title.trim(),
+            category: category.toLowerCase(),
+            cookingTime: Number(cookingTime),
+            difficulty: difficulty.toLowerCase(),
+            tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
+            ingredients: parsedIngredients.map(ing => ({
+                name: ing.name?.trim(),
+                amount: ing.amount?.trim()
+            })),
+            instructions: parsedInstructions.map(inst => inst.trim()),
+            imageUrl,
+            createdBy: formCreatedBy || 'anonymous',
+            createdByName: formCreatedByName || 'Anonymous',
+            createdByEmail: formCreatedByEmail || '',
+            createdAt: new Date()
+        });
+
+        const savedRecipe = await newRecipe.save();
+        res.status(201).json(savedRecipe);
+
+    } catch (error) {
+        console.error('Error creating recipe:', error);
+        res.status(500).json({ 
+            message: 'Failed to create recipe',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB connected');
