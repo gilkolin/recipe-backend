@@ -176,8 +176,8 @@ recipeSchema.index({ createdAt: -1 });
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-router.put('/:id', authenticateUser, upload.single('image'), async (req, res) => {
-// POST a new recipe (UPDATED with category and tags)router.put('/:id', authenticateUser, upload.single('image'), async (req, res) => {
+router.put('/:id', upload.single('image'), async (req, res) => {
+// POST a new recipe (UPDATED with category and tags)router.put('/:id', upload.single('image'), async (req, res) => {
     try {
         console.log('=== PUT DEBUGGING START ===');
         console.log('File received:', !!req.file);
