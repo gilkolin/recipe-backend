@@ -176,39 +176,36 @@ recipeSchema.index({ createdAt: -1 });
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// POST a new recipe (UPDATED with category and tags)
-router.post('/', upload.single('image'), async (req, res) => {
+router.put('/:id', authenticateUser, upload.single('image'), async (req, res) => {
+// POST a new recipe (UPDATED with category and tags)router.put('/:id', authenticateUser, upload.single('image'), async (req, res) => {
     try {
-        console.log('=== DEBUGGING START ===');
+        console.log('=== PUT DEBUGGING START ===');
         console.log('File received:', !!req.file);
-        if (req.file) {
-            console.log('File details:', {
-                originalname: req.file.originalname,
-                size: req.file.size,
-                mimetype: req.file.mimetype
-            });
-        }
-        
         console.log('Request body:', req.body);
-        console.log('=== DEBUGGING END ===');
+        console.log('Recipe ID:', req.params.id);
+        console.log('=== PUT DEBUGGING END ===');
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
-		// Extract user data from form
-		const formCreatedBy = req.body.createdBy;
-		const formCreatedByName = req.body.createdByName;
-		const formCreatedByEmail = req.body.createdByEmail;
+        // Extract user data from form
+        const formCreatedBy = req.body.createdBy;
+        const formCreatedByName = req.body.createdByName;
+        const formCreatedByEmail = req.body.createdByEmail;
 
+        // Find existing recipe
+        const existingRecipe = await Recipe.findById(req.params.id);
+        if (!existingRecipe) {
+            return res.status(404).json({ message: 'Recipe not found' });
+        }
 
-
-        // Validation
+        // Validation (same as POST)
         if (!title || !category || !ingredients || !instructions) {
             return res.status(400).json({ 
                 message: 'Missing required fields: title, category, ingredients, and instructions are required' 
             });
         }
 
-        // Parse JSON data
+        // Parse JSON data (same as POST)
         let parsedIngredients, parsedInstructions, parsedTags;
         
         try {
@@ -221,33 +218,15 @@ router.post('/', upload.single('image'), async (req, res) => {
             });
         }
 
-        // Validate parsed data
-        if (!Array.isArray(parsedIngredients) || parsedIngredients.length === 0) {
-            return res.status(400).json({ 
-                message: 'Ingredients must be a non-empty array' 
-            });
-        }
-
-        if (!Array.isArray(parsedInstructions) || parsedInstructions.length === 0) {
-            return res.status(400).json({ 
-                message: 'Instructions must be a non-empty array' 
-            });
-        }
-
-        // Validate category
-        const validCategories = ['pastries', 'cakes', 'cookies', 'cooking', 'bread', 'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'];
-        if (!validCategories.includes(category.toLowerCase())) {
-            return res.status(400).json({ 
-                message: 'Invalid category. Must be one of: ' + validCategories.join(', ')
-            });
-        }
-
-        // Upload image to Cloudinary if present
-        let imageUrl = null;
+        // Handle image upload (only if new image provided)
+        let imageUrl = existingRecipe.imageUrl; // Keep existing image by default
         if (req.file) {
             try {
                 const filename = req.file.originalname.split('.')[0];
                 imageUrl = await uploadToCloudinary(req.file.buffer, filename);
+                
+                // Optionally delete old image from Cloudinary here
+                // ... cloudinary deletion code ...
             } catch (uploadError) {
                 console.error('Error uploading to Cloudinary:', uploadError);
                 return res.status(500).json({ 
@@ -256,58 +235,32 @@ router.post('/', upload.single('image'), async (req, res) => {
             }
         }
 
-        const newRecipe = new Recipe({
-			title: title.trim(),
-			category: category.toLowerCase(),
-			cookingTime: Number(cookingTime),
-			difficulty: difficulty.toLowerCase(),
-			tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
-			ingredients: parsedIngredients.map(ing => ({
-				name: ing.name?.trim(),
-				amount: ing.amount?.trim()
-			})),
-			instructions: parsedInstructions.map(inst => inst.trim()),
-			imageUrl,
-			// Use req.user if available, otherwise fall back to form data
-			createdBy: req.user?.uid || formCreatedBy || null,
-			createdByName: req.user?.displayName || formCreatedByName || 'Anonymous',
-			createdByEmail: req.user?.email || formCreatedByEmail || null,
-			createdAt: new Date()
-		});
-        
-		try {
-			const savedRecipe = await newRecipe.save();
-			res.status(201).json(savedRecipe);
-		} catch (error) {
-			console.error('Recipe save error:', error); // This will show in your server logs
-			res.status(500).json({ 
-				message: 'Failed to save recipe', 
-				error: error.message,
-				details: error.errors // Mongoose validation errors
-			});
-		}
-		console.log('Recipe saved successfully:', savedRecipe._id);
+        // Update the recipe
+        const updatedRecipe = await Recipe.findByIdAndUpdate(
+            req.params.id,
+            {
+                title: title.trim(),
+                category: category.toLowerCase(),
+                cookingTime: Number(cookingTime),
+                difficulty: difficulty.toLowerCase(),
+                tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
+                ingredients: parsedIngredients.map(ing => ({
+                    name: ing.name?.trim(),
+                    amount: ing.amount?.trim()
+                })),
+                instructions: parsedInstructions.map(inst => inst.trim()),
+                imageUrl,
+                updatedAt: new Date()
+            },
+            { new: true, runValidators: true }
+        );
 
-        const verification = await Recipe.findById(savedRecipe._id);
-        console.log('Verification - recipe exists in DB:', !!verification);
-        
-        res.status(201).json({
-            message: 'Recipe saved successfully!',
-            recipe: savedRecipe
-        });
+        res.json(updatedRecipe);
 
     } catch (error) {
-        console.error('Error saving recipe:', error);
-        
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                message: 'Validation error',
-                errors: Object.values(error.errors).map(err => err.message)
-            });
-        }
-
+        console.error('Error updating recipe:', error);
         res.status(500).json({ 
-            message: 'Failed to save recipe',
+            message: 'Failed to update recipe',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
