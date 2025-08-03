@@ -194,6 +194,13 @@ router.post('/', upload.single('image'), async (req, res) => {
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
+		// Extract user data from form
+		const formCreatedBy = req.body.createdBy;
+		const formCreatedByName = req.body.createdByName;
+		const formCreatedByEmail = req.body.createdByEmail;
+
+
+
         // Validation
         if (!title || !category || !ingredients || !instructions) {
             return res.status(400).json({ 
@@ -262,14 +269,24 @@ router.post('/', upload.single('image'), async (req, res) => {
 			instructions: parsedInstructions.map(inst => inst.trim()),
 			imageUrl,
 			// Use req.user if available, otherwise fall back to form data
-			createdBy: req.user?.uid || createdBy,
-			createdByName: req.user?.displayName || createdByName,
-			createdByEmail: req.user?.email || createdByEmail,
+			createdBy: req.user?.uid || formCreatedBy || null,
+			createdByName: req.user?.displayName || formCreatedByName || 'Anonymous',
+			createdByEmail: req.user?.email || formCreatedByEmail || null,
 			createdAt: new Date()
 		});
-
-        const savedRecipe = await newRecipe.save();
-        console.log('Recipe saved successfully:', savedRecipe._id);
+        
+		try {
+			const savedRecipe = await newRecipe.save();
+			res.status(201).json(savedRecipe);
+		} catch (error) {
+			console.error('Recipe save error:', error); // This will show in your server logs
+			res.status(500).json({ 
+				message: 'Failed to save recipe', 
+				error: error.message,
+				details: error.errors // Mongoose validation errors
+			});
+		}
+		console.log('Recipe saved successfully:', savedRecipe._id);
 
         const verification = await Recipe.findById(savedRecipe._id);
         console.log('Verification - recipe exists in DB:', !!verification);
