@@ -2512,8 +2512,20 @@
 				});
 
 				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(errorData.message || 'Failed to save recipe');
+					// Check if response is JSON before parsing
+					const contentType = response.headers.get('content-type');
+					let errorMessage = 'Failed to save recipe';
+					
+					if (contentType && contentType.includes('application/json')) {
+						const errorData = await response.json();
+						errorMessage = errorData.message || errorMessage;
+					} else {
+						// If not JSON, get as text
+						const errorText = await response.text();
+						errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+					}
+					
+					throw new Error(errorMessage);
 				}
 				
 				const savedRecipe = await response.json();
