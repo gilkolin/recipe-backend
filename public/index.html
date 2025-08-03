@@ -2514,6 +2514,8 @@
 					const errorData = await response.json();
 					throw new Error(errorData.message || 'Failed to save recipe');
 				}
+				
+				const savedRecipe = await response.json();
 
 				if (isEditing) {
 					showNotification('Recipe updated successfully!');
