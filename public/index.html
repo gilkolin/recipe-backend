@@ -661,6 +661,10 @@
             justify-content: center;
         }
 
+        .table-delete-btn.show {
+            display: flex;
+        }
+        
         .table-delete-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 3px 10px rgba(220, 53, 69, 0.4);
@@ -797,6 +801,23 @@
             height: 100%;
             background-color: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
+        }
+
+        .edit-recipe-btn {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none; /* Hide by default */
+        }
+
+        .edit-recipe-btn.show {
+            display: block;
         }
 
 		.edit-recipe-btn:hover {
@@ -1122,7 +1143,7 @@
             margin-bottom: 8px;
         }
         
-        .delete-recipe-btn {
+       .delete-recipe-btn {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -1135,8 +1156,14 @@
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s ease;
+            display: none; /* Hide by default */
         }
 
+        .delete-recipe-btn.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .delete-recipe-btn:hover {
             background: rgba(220, 53, 69, 1);
             transform: scale(1.1);
@@ -1458,7 +1485,7 @@
     <div id="recipeModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-				<button class="edit-recipe-btn" onclick="editRecipe()" style="position: absolute; left: 20px; top: 20px; background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">✏️ Edit</button>
+				<button class="edit-recipe-btn" onclick="editRecipe()">✏️ Edit</button>
                 <span class="close" onclick="closeModal()">&times;</span>
                 <h2 id="modalRecipeTitle"></h2>
                 <div class="modal-recipe-meta">
@@ -1553,15 +1580,26 @@
 		let currentUser = null;
 
 		// Auth state listener
-		auth.onAuthStateChanged(function(user) {
-			currentUser = user;
-			updateAuthUI();
-			if (user) {
-				console.log('User signed in:', user.displayName);
-			} else {
-				console.log('User signed out');
-			}
-		});
+		// Auth state listener
+        auth.onAuthStateChanged(function(user) {
+            currentUser = user;
+            updateAuthUI();
+            
+            // Refresh recipes display to show/hide ownership controls
+            if (allRecipes.length > 0) {
+                if (currentView === 'grid') {
+                    renderRecipes(allRecipes);
+                } else {
+                    renderTableView(allRecipes);
+                }
+            }
+            
+            if (user) {
+                console.log('User signed in:', user.displayName);
+            } else {
+                console.log('User signed out');
+            }
+        });
 
 		// Auth functions
 		function signIn() {
@@ -2229,6 +2267,12 @@
                     `<span class="comment-indicator" title="${recipe.commentCount} comments">💬</span>` : '';
 					console.log(`Table Recipe ${recipe.title}: commentCount = ${recipe.commentCount}`); // Add this line
                 
+                    // Show delete button only for recipe owner
+                    const isOwner = currentUser && recipe.createdBy === currentUser.uid;
+                    const deleteButton = isOwner 
+                        ? `<button class="table-delete-btn show" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">🗑️</button>`
+                        : '';
+                        
                 return `
                     <tr onclick="openModal('${recipe._id}')">
                         <td><span class="table-category">${recipe.category}</span></td>
@@ -2246,7 +2290,7 @@
                         <td><span class="difficulty-badge ${difficultyClass}">${recipe.difficulty}</span></td>
                         <td>
                             <div class="table-actions">
-                                <button class="table-delete-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
+                                ${deleteButton}
                             </div>
                         </td>
                     </tr>
@@ -2282,12 +2326,15 @@
                 `<span class="comment-indicator" title="${recipe.commentCount} comments">💬</span>` : '';
 			console.log(`Recipe ${recipe.title}: commentCount = ${recipe.commentCount}`); // Add this line
 			
-			const deleteButton = (currentUser && recipe.createdBy === currentUser.uid) 
-				? `<button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>`
-				: '';
+			 // Show delete button only for recipe owner
+            const isOwner = currentUser && recipe.createdBy === currentUser.uid;
+            const deleteButton = isOwner 
+                ? `<button class="delete-recipe-btn show" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">🗑️</button>`
+                : `<button class="delete-recipe-btn" style="display: none;">🗑️</button>`;
+                
             card.innerHTML = `
                 ${imageHtml}
-                <button class="delete-recipe-btn" onclick="deleteRecipe('${recipe._id}', event)" title="Delete Recipe">×</button>
+                 ${deleteButton}
                 <div class="recipe-content">
                     <div class="recipe-title">
                         ${recipe.title}
@@ -2407,6 +2454,18 @@
             const instructionsList = document.getElementById('modalInstructionsList');
             instructionsList.innerHTML = recipe.instructions.map(step => `<li>${step}</li>`).join('');
 
+            // Show edit button only for recipe owner
+            const editBtn = document.querySelector('.edit-recipe-btn');
+            const isOwner = currentUser && recipe.createdBy === currentUser.uid;
+            
+            if (isOwner) {
+                editBtn.classList.add('show');
+                editBtn.style.display = 'block';
+            } else {
+                editBtn.classList.remove('show');
+                editBtn.style.display = 'none';
+            }
+            
             loadComments(recipeId);
 
             document.getElementById('recipeModal').style.display = 'block';
