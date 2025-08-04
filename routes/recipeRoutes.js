@@ -266,7 +266,6 @@ router.post('/', upload.single('image'), async (req, res) => {
         });
     }
 });
-
 router.put('/:id', upload.single('image'), async (req, res) => {
 // POST a new recipe (UPDATED with category and tags)router.put('/:id', upload.single('image'), async (req, res) => {
     try {
@@ -341,7 +340,10 @@ router.put('/:id', upload.single('image'), async (req, res) => {
                 })),
                 instructions: parsedInstructions.map(inst => inst.trim()),
                 imageUrl,
-                updatedAt: new Date()
+				createdBy: formCreatedBy || existingRecipe.createdBy || 'anonymous',
+				createdByName: formCreatedByName || existingRecipe.createdByName || 'Anonymous',
+				createdByEmail: formCreatedByEmail || existingRecipe.createdByEmail || '',
+				updatedAt: new Date()
             },
             { new: true, runValidators: true }
         );
