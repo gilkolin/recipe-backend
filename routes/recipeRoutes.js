@@ -59,8 +59,6 @@ const uploadToCloudinary = (buffer, filename) => {
         ).end(buffer);
     });
 };
-
-// UPDATED Recipe schema with categories and tags
 const recipeSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -113,11 +111,23 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // 🔥 ADD THESE USER OWNERSHIP FIELDS
+    createdBy: {
+        type: String,
+        required: true // Firebase UID
+    },
+    createdByName: {
+        type: String,
+        default: 'Anonymous'
+    },
+    createdByEmail: {
+        type: String,
+        default: ''
+    },
     createdAt: {
         type: Date,
         default: Date.now
     },
-
     // 🔥 Ratings feature
     ratings: [{
         rating: {
@@ -139,7 +149,6 @@ const recipeSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-
     // 💬 Comments feature
     comments: [{
         text: {
@@ -167,10 +176,12 @@ recipeSchema.index({ createdAt: -1 });
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// POST a new recipe (UPDATED with category and tags)
 router.post('/', upload.single('image'), async (req, res) => {
+    console.log('🔥 POST ROUTE HIT - BEFORE ANY PROCESSING');
     try {
-        console.log('=== DEBUGGING START ===');
+         console.log('=== POST CREATE RECIPE - DEBUGGING START ===');
+        console.log('Headers:', req.headers);
+        console.log('Content-Type:', req.headers['content-type']);
         console.log('File received:', !!req.file);
         if (req.file) {
             console.log('File details:', {
@@ -179,11 +190,19 @@ router.post('/', upload.single('image'), async (req, res) => {
                 mimetype: req.file.mimetype
             });
         }
-        
-        console.log('Request body:', req.body);
-        console.log('=== DEBUGGING END ===');
+        console.log('Request body keys:', Object.keys(req.body));
+        console.log('Request body values:', req.body);
+        console.log('Raw ingredients string:', req.body.ingredients);
+        console.log('Raw instructions string:', req.body.instructions);
+        console.log('Raw tags string:', req.body.tags);
+        console.log('=== POST CREATE RECIPE - DEBUGGING END ===');
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
+
+        // Extract user data from form
+        const formCreatedBy = req.body.createdBy;
+        const formCreatedByName = req.body.createdByName;
+        const formCreatedByEmail = req.body.createdByEmail;
 
         // Validation
         if (!title || !category || !ingredients || !instructions) {
@@ -196,8 +215,8 @@ router.post('/', upload.single('image'), async (req, res) => {
         let parsedIngredients, parsedInstructions, parsedTags;
         
         try {
-            parsedIngredients = JSON.parse(ingredients);
-            parsedInstructions = JSON.parse(instructions);
+            parsedIngredients = ingredients ? JSON.parse(ingredients) : [];
+            parsedInstructions = instructions ? JSON.parse(instructions) : [];
             parsedTags = tags ? JSON.parse(tags) : [];
         } catch (parseError) {
             return res.status(400).json({ 
@@ -218,14 +237,6 @@ router.post('/', upload.single('image'), async (req, res) => {
             });
         }
 
-        // Validate category
-        const validCategories = ['pastries', 'cakes', 'cookies', 'cooking', 'bread', 'desserts', 'appetizers', 'main-dishes', 'salads', 'soups', 'beverages'];
-        if (!validCategories.includes(category.toLowerCase())) {
-            return res.status(400).json({ 
-                message: 'Invalid category. Must be one of: ' + validCategories.join(', ')
-            });
-        }
-
         // Upload image to Cloudinary if present
         let imageUrl = null;
         if (req.file) {
@@ -241,42 +252,136 @@ router.post('/', upload.single('image'), async (req, res) => {
         }
 
         const newRecipe = new Recipe({
-			title: title.trim(),
-			category: category.toLowerCase(),
-			cookingTime: Number(cookingTime),
-			difficulty: difficulty.toLowerCase(),
-			tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
-			ingredients: parsedIngredients.map(ing => ({
-				name: ing.name?.trim(),
-				amount: ing.amount?.trim()
-			})),
-			instructions: parsedInstructions.map(inst => inst.trim()),
-			imageUrl
-		});
-
-        const savedRecipe = await newRecipe.save();
-        console.log('Recipe saved successfully:', savedRecipe._id);
-
-        const verification = await Recipe.findById(savedRecipe._id);
-        console.log('Verification - recipe exists in DB:', !!verification);
-        
-        res.status(201).json({
-            message: 'Recipe saved successfully!',
-            recipe: savedRecipe
+            title: title.trim(),
+            category: category.toLowerCase(),
+            cookingTime: Number(cookingTime),
+            difficulty: difficulty.toLowerCase(),
+            tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
+            ingredients: parsedIngredients.map(ing => ({
+                name: ing.name?.trim(),
+                amount: ing.amount?.trim()
+            })),
+            instructions: parsedInstructions.map(inst => inst.trim()),
+            imageUrl,
+            createdBy: formCreatedBy || 'anonymous',
+            createdByName: formCreatedByName || 'Anonymous',
+            createdByEmail: formCreatedByEmail || '',
+            createdAt: new Date()
         });
 
+        const savedRecipe = await newRecipe.save();
+        res.status(201).json(savedRecipe);
+
     } catch (error) {
-        console.error('Error saving recipe:', error);
-        
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                message: 'Validation error',
-                errors: Object.values(error.errors).map(err => err.message)
+        console.error('Error creating recipe:', error);
+        res.status(500).json({ 
+            message: 'Failed to create recipe',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+router.put('/:id', upload.single('image'), async (req, res) => {
+// POST a new recipe (UPDATED with category and tags)router.put('/:id', upload.single('image'), async (req, res) => {
+    try {
+        console.log('=== PUT UPDATE RECIPE - DEBUGGING START ===');
+        console.log('Recipe ID:', req.params.id);
+        console.log('Headers:', req.headers);
+        console.log('Content-Type:', req.headers['content-type']);
+        console.log('File received:', !!req.file);
+        if (req.file) {
+            console.log('File details:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
+            });
+        }
+        console.log('Request body keys:', Object.keys(req.body));
+        console.log('Request body values:', req.body);
+        console.log('Raw ingredients string:', req.body.ingredients);
+        console.log('Raw instructions string:', req.body.instructions);
+        console.log('Raw tags string:', req.body.tags);
+        console.log('=== PUT UPDATE RECIPE - DEBUGGING END ===');
+
+
+        const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
+
+        // Extract user data from form
+        const formCreatedBy = req.body.createdBy;
+        const formCreatedByName = req.body.createdByName;
+        const formCreatedByEmail = req.body.createdByEmail;
+
+        // Find existing recipe
+        const existingRecipe = await Recipe.findById(req.params.id);
+        if (!existingRecipe) {
+            return res.status(404).json({ message: 'Recipe not found' });
+        }
+
+        // Validation (same as POST)
+        if (!title || !category || !ingredients || !instructions) {
+            return res.status(400).json({ 
+                message: 'Missing required fields: title, category, ingredients, and instructions are required' 
             });
         }
 
+        // Parse JSON data (same as POST)
+        let parsedIngredients, parsedInstructions, parsedTags;
+        
+        try {
+            parsedIngredients = JSON.parse(ingredients);
+            parsedInstructions = JSON.parse(instructions);
+            parsedTags = tags ? JSON.parse(tags) : [];
+        } catch (parseError) {
+            return res.status(400).json({ 
+                message: 'Invalid JSON format for ingredients, instructions, or tags' 
+            });
+        }
+
+        // Handle image upload (only if new image provided)
+        let imageUrl = existingRecipe.imageUrl; // Keep existing image by default
+        if (req.file) {
+            try {
+                const filename = req.file.originalname.split('.')[0];
+                imageUrl = await uploadToCloudinary(req.file.buffer, filename);
+                
+                // Optionally delete old image from Cloudinary here
+                // ... cloudinary deletion code ...
+            } catch (uploadError) {
+                console.error('Error uploading to Cloudinary:', uploadError);
+                return res.status(500).json({ 
+                    message: 'Failed to upload image' 
+                });
+            }
+        }
+
+        // Update the recipe
+        const updatedRecipe = await Recipe.findByIdAndUpdate(
+            req.params.id,
+            {
+                title: title.trim(),
+                category: category.toLowerCase(),
+                cookingTime: Number(cookingTime),
+                difficulty: difficulty.toLowerCase(),
+                tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
+                ingredients: parsedIngredients.map(ing => ({
+                    name: ing.name?.trim(),
+                    amount: ing.amount?.trim()
+                })),
+                instructions: parsedInstructions.map(inst => inst.trim()),
+                imageUrl,
+				createdBy: formCreatedBy || existingRecipe.createdBy || 'anonymous',
+				createdByName: formCreatedByName || existingRecipe.createdByName || 'Anonymous',
+				createdByEmail: formCreatedByEmail || existingRecipe.createdByEmail || '',
+				updatedAt: new Date()
+            },
+            { new: true, runValidators: true }
+        );
+
+        res.json(updatedRecipe);
+
+    } catch (error) {
+        console.error('Error updating recipe:', error);
         res.status(500).json({ 
-            message: 'Failed to save recipe',
+            message: 'Failed to update recipe',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
@@ -441,6 +546,7 @@ router.post('/:id/comments', async (req, res) => {
   }
 });
 
+
 router.post('/:id/ratings', async (req, res) => {
   try {
     const { rating } = req.body;
@@ -473,6 +579,128 @@ router.post('/:id/ratings', async (req, res) => {
   } catch (err) {
     console.error('Error adding rating:', err);
     res.status(500).json({ message: 'Failed to submit rating' });
+  }
+});
+
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Return comments array (or empty array if no comments)
+    const comments = recipe.comments || [];
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:id/comment', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || text.trim() === '') {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const newComment = {
+      text: text.trim(),
+      author: 'Anonymous', // You can enhance this with actual user data
+      createdAt: new Date()
+    };
+
+    // Initialize comments array if it doesn't exist
+    if (!recipe.comments) {
+      recipe.comments = [];
+    }
+
+    recipe.comments.push(newComment);
+    await recipe.save();
+
+    res.status(201).json({ 
+      message: 'Comment added successfully', 
+      comment: newComment,
+      total: recipe.comments.length 
+    });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:id/rate', async (req, res) => {
+  try {
+    const { rating } = req.body;
+    
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    // Initialize ratings array if it doesn't exist
+    if (!recipe.ratings) {
+      recipe.ratings = [];
+    }
+
+    // Add the new rating
+    recipe.ratings.push({
+      rating: parseInt(rating),
+      createdAt: new Date()
+    });
+
+    // Calculate average rating
+    const totalRatings = recipe.ratings.length;
+    const sumRatings = recipe.ratings.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = sumRatings / totalRatings;
+
+    // Update recipe with calculated values
+    recipe.averageRating = averageRating;
+    recipe.ratingsCount = totalRatings;
+
+    await recipe.save();
+
+    res.json({ 
+      message: 'Rating submitted successfully',
+      averageRating: averageRating,
+      ratingsCount: totalRatings
+    });
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/:id/tags', async (req, res) => {
+  try {
+    const { tags } = req.body;
+    
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    recipe.tags = Array.isArray(tags) ? tags : [];
+    await recipe.save();
+
+    res.json({ 
+      message: 'Tags updated successfully',
+      tags: recipe.tags 
+    });
+  } catch (error) {
+    console.error('Error updating tags:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 module.exports = router;

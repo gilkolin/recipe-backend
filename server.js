@@ -9,8 +9,9 @@ const Recipe = require('./models/Recipe');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
 app.use('/api/recipes', recipeRoutes);
+app.use(express.json());
+
 
 // ==========================================================
 // Serve static files from the 'public' directory (CHANGED)
@@ -126,6 +127,7 @@ app.get('/api/recipes/:id/comments', async (req, res) => {
     }
 });
 
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB connected');
@@ -134,3 +136,61 @@ mongoose.connect(process.env.MONGODB_URI)
         });
     })
     .catch(err => console.error('DB connection error:', err));
+
+
+const admin = require('firebase-admin');
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  }),
+});
+
+// Middleware to verify Firebase token
+async function authenticateUser(req, res, next) {
+    try {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (token) {
+            const decodedToken = await admin.auth().verifyIdToken(token);
+            req.user = decodedToken;
+        }
+        next();
+    } catch (error) {
+        console.error('Auth error:', error);
+        next(); // Continue without user for public endpoints
+    }
+}
+
+// Middleware to check recipe ownership
+async function checkRecipeOwnership(req, res, next) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        
+        const recipe = await Recipe.findById(req.params.id); // Adjust based on your DB
+        if (!recipe) {
+            return res.status(404).json({ message: 'Recipe not found' });
+        }
+        
+        if (recipe.createdBy !== req.user.uid) {
+            return res.status(403).json({ message: 'You can only modify your own recipes' });
+        }
+        
+        req.recipe = recipe;
+        next();
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+app.delete('/api/recipes/:id', authenticateUser, checkRecipeOwnership, async (req, res) => {
+    try {
+        await Recipe.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Recipe deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to delete recipe' });
+    }
+});
