@@ -581,4 +581,126 @@ router.post('/:id/ratings', async (req, res) => {
     res.status(500).json({ message: 'Failed to submit rating' });
   }
 });
+
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+    
+    // Return comments array (or empty array if no comments)
+    const comments = recipe.comments || [];
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:id/comment', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || text.trim() === '') {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const newComment = {
+      text: text.trim(),
+      author: 'Anonymous', // You can enhance this with actual user data
+      createdAt: new Date()
+    };
+
+    // Initialize comments array if it doesn't exist
+    if (!recipe.comments) {
+      recipe.comments = [];
+    }
+
+    recipe.comments.push(newComment);
+    await recipe.save();
+
+    res.status(201).json({ 
+      message: 'Comment added successfully', 
+      comment: newComment,
+      total: recipe.comments.length 
+    });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:id/rate', async (req, res) => {
+  try {
+    const { rating } = req.body;
+    
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    // Initialize ratings array if it doesn't exist
+    if (!recipe.ratings) {
+      recipe.ratings = [];
+    }
+
+    // Add the new rating
+    recipe.ratings.push({
+      rating: parseInt(rating),
+      createdAt: new Date()
+    });
+
+    // Calculate average rating
+    const totalRatings = recipe.ratings.length;
+    const sumRatings = recipe.ratings.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = sumRatings / totalRatings;
+
+    // Update recipe with calculated values
+    recipe.averageRating = averageRating;
+    recipe.ratingsCount = totalRatings;
+
+    await recipe.save();
+
+    res.json({ 
+      message: 'Rating submitted successfully',
+      averageRating: averageRating,
+      ratingsCount: totalRatings
+    });
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/:id/tags', async (req, res) => {
+  try {
+    const { tags } = req.body;
+    
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    recipe.tags = Array.isArray(tags) ? tags : [];
+    await recipe.save();
+
+    res.json({ 
+      message: 'Tags updated successfully',
+      tags: recipe.tags 
+    });
+  } catch (error) {
+    console.error('Error updating tags:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = router;
