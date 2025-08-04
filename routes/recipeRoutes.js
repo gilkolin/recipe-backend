@@ -178,10 +178,23 @@ const Recipe = mongoose.model('Recipe', recipeSchema);
 
 router.post('/', upload.single('image'), async (req, res) => {
     try {
-        console.log('=== POST DEBUGGING START ===');
+         console.log('=== POST CREATE RECIPE - DEBUGGING START ===');
+        console.log('Headers:', req.headers);
+        console.log('Content-Type:', req.headers['content-type']);
         console.log('File received:', !!req.file);
-        console.log('Request body:', req.body);
-        console.log('=== POST DEBUGGING END ===');
+        if (req.file) {
+            console.log('File details:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
+            });
+        }
+        console.log('Request body keys:', Object.keys(req.body));
+        console.log('Request body values:', req.body);
+        console.log('Raw ingredients string:', req.body.ingredients);
+        console.log('Raw instructions string:', req.body.instructions);
+        console.log('Raw tags string:', req.body.tags);
+        console.log('=== POST CREATE RECIPE - DEBUGGING END ===')
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
@@ -269,11 +282,26 @@ router.post('/', upload.single('image'), async (req, res) => {
 router.put('/:id', upload.single('image'), async (req, res) => {
 // POST a new recipe (UPDATED with category and tags)router.put('/:id', upload.single('image'), async (req, res) => {
     try {
-        console.log('=== PUT DEBUGGING START ===');
-        console.log('File received:', !!req.file);
-        console.log('Request body:', req.body);
+        try {
+        console.log('=== PUT UPDATE RECIPE - DEBUGGING START ===');
         console.log('Recipe ID:', req.params.id);
-        console.log('=== PUT DEBUGGING END ===');
+        console.log('Headers:', req.headers);
+        console.log('Content-Type:', req.headers['content-type']);
+        console.log('File received:', !!req.file);
+        if (req.file) {
+            console.log('File details:', {
+                originalname: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype
+            });
+        }
+        console.log('Request body keys:', Object.keys(req.body));
+        console.log('Request body values:', req.body);
+        console.log('Raw ingredients string:', req.body.ingredients);
+        console.log('Raw instructions string:', req.body.instructions);
+        console.log('Raw tags string:', req.body.tags);
+        console.log('=== PUT UPDATE RECIPE - DEBUGGING END ===');
+
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
