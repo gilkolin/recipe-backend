@@ -177,6 +177,7 @@ recipeSchema.index({ createdAt: -1 });
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
 router.post('/', upload.single('image'), async (req, res) => {
+    console.log('🔥 POST ROUTE HIT - BEFORE ANY PROCESSING');
     try {
          console.log('=== POST CREATE RECIPE - DEBUGGING START ===');
         console.log('Headers:', req.headers);
