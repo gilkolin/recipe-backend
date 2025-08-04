@@ -282,7 +282,6 @@ router.post('/', upload.single('image'), async (req, res) => {
 router.put('/:id', upload.single('image'), async (req, res) => {
 // POST a new recipe (UPDATED with category and tags)router.put('/:id', upload.single('image'), async (req, res) => {
     try {
-        try {
         console.log('=== PUT UPDATE RECIPE - DEBUGGING START ===');
         console.log('Recipe ID:', req.params.id);
         console.log('Headers:', req.headers);
