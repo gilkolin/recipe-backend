@@ -9,10 +9,9 @@ const Recipe = require('./models/Recipe');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ 
-    type: (req) => !req.is('multipart/*') 
-}));
 app.use('/api/recipes', recipeRoutes);
+app.use(express.json());
+
 
 // ==========================================================
 // Serve static files from the 'public' directory (CHANGED)
