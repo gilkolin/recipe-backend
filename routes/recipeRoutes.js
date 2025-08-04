@@ -194,7 +194,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         console.log('Raw ingredients string:', req.body.ingredients);
         console.log('Raw instructions string:', req.body.instructions);
         console.log('Raw tags string:', req.body.tags);
-        console.log('=== POST CREATE RECIPE - DEBUGGING END ===')
+        console.log('=== POST CREATE RECIPE - DEBUGGING END ===');
 
         const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
