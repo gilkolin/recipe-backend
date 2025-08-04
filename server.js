@@ -9,7 +9,9 @@ const Recipe = require('./models/Recipe');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ 
+    type: (req) => !req.is('multipart/*') 
+}));
 app.use('/api/recipes', recipeRoutes);
 
 // ==========================================================
@@ -191,19 +193,5 @@ app.delete('/api/recipes/:id', authenticateUser, checkRecipeOwnership, async (re
         res.json({ message: 'Recipe deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete recipe' });
-    }
-});
-
-// PUT /api/recipes/:id  
-app.put('/api/recipes/:id', authenticateUser, checkRecipeOwnership, async (req, res) => {
-    try {
-        const updatedRecipe = await Recipe.findByIdAndUpdate(
-            req.params.id, 
-            req.body, 
-            { new: true }
-        );
-        res.json(updatedRecipe);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to update recipe' });
     }
 });
