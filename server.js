@@ -11,6 +11,7 @@ const app = express();
 app.use(cors());
 app.use('/api/recipes', recipeRoutes);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // ==========================================================

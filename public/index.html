@@ -750,6 +750,14 @@
             flex-wrap: wrap;
         }
 
+        .recipe-description-preview {
+            font-size: 0.9em;
+            color: #666;
+            margin: 8px 0;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
         .recipe-time, .recipe-difficulty {
             background: #e2e8f0;
             color: #4a5568;
@@ -1331,12 +1339,12 @@
                 <h2 id="form-title">Add New Recipe</h2>
                 <form id="recipeForm">
                     <div class="form-group">
-                        <label for="recipeTitle" id="title-label">Recipe Title</label>
+                        <label for="recipeTitle" id="title-label">Recipe Title <span style="color: red;">*</span></label></label>
                         <input type="text" id="recipeTitle" required placeholder="Enter recipe title...">
                     </div>
 
                     <div class="form-group">
-                        <label for="recipeCategory" id="category-label">Category</label>
+                        <label for="recipeCategory" id="category-label">Category <span style="color: red;">*</span></label></label>
                         <select id="recipeCategory" required>
                             <option value="">Select a category...</option>
                             <option value="pastries">Pastries</option>
@@ -1352,13 +1360,18 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label for="recipeDescription" id="description-label">Description</label>
+                        <textarea id="recipeDescription" placeholder="Brief description of your recipe..." rows="3"></textarea>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="cookingTime" id="time-label">Cooking Time (minutes)</label>
+                            <label for="cookingTime" id="time-label">Cooking Time (minutes) <span style="color: red;">*</span></label></label>
                             <input type="number" id="cookingTime" required placeholder="30" min="1" max="600">
                         </div>
                         <div class="form-group">
-                            <label for="difficulty" id="difficulty-label">Difficulty Level</label>
+                            <label for="difficulty" id="difficulty-label">Difficulty Level <span style="color: red;">*</span></label></label>
                             <select id="difficulty" required>
                                 <option value="">Select difficulty...</option>
                                 <option value="easy">Easy</option>
@@ -1378,7 +1391,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label id="ingredients-label">Ingredients</label>
+                        <label id="ingredients-label">Ingredients <span style="color: red;">*</span></label></label>
                         <div class="ingredients-container" id="ingredientsContainer">
 						<div class="ingredient-group" data-group="0">
 							<div class="group-header">
@@ -1397,7 +1410,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label id="instructions-label">Instructions</label>
+                        <label id="instructions-label">Instructions <span style="color: red;">*</span></label></label>
                         <div class="instructions-container" id="instructionsContainer">
                             <div class="instruction-item">
                                 <input type="text" placeholder="Step 1...">
@@ -1498,6 +1511,11 @@
             <div class="modal-body">
                 <img id="modalRecipeImage" class="modal-recipe-image" style="display: none;">
                 <div class="recipe-tags" id="modalRecipeTags"></div>
+
+                <div class="recipe-description" id="modalRecipeDescription" style="margin: 15px 0; padding: 15px; background: #f7fafc; border-radius: 8px; display: none;">
+                    <h4 id="modal-description-title">Description</h4>
+                    <p id="modalDescriptionText"></p>
+                </div>
                 
                 <div class="rating-section">
                     <h4>Rating</h4>
@@ -1681,7 +1699,25 @@
                 'table-header-rating': 'Rating',
                 'table-header-difficulty': 'Difficulty',
                 'table-header-actions': 'Actions',
-				'update-btn': 'Update Recipe'
+				'update-btn': 'Update Recipe',
+                'description-label': 'Description',
+                'description-placeholder': 'Brief description of your recipe...',
+                'modal-description-title': 'Description',
+                'category-pastries': 'Pastries',
+                'category-cakes': 'Cakes', 
+                'category-cookies': 'Cookies',
+                'category-bread': 'Bread',
+                'category-desserts': 'Desserts',
+                'category-cooking': 'Main Dishes',
+                'category-appetizers': 'Appetizers',
+                'category-salads': 'Salads',
+                'category-soups': 'Soups',
+                'category-beverages': 'Beverages',
+                'difficulty-easy': 'Easy',
+                'difficulty-medium': 'Medium',
+                'difficulty-hard': 'Hard',
+                'all-categories': 'All Categories',
+                'all-difficulties': 'All Difficulties'
             },
             he: {
                 'site-title': 'שיתוף מתכונים',
@@ -1720,7 +1756,31 @@
                 'table-header-rating': 'דירוג',
                 'table-header-difficulty': 'קושי',
                 'table-header-actions': 'פעולות',
-				'update-btn': 'עדכן מתכון'
+				'update-btn': 'עדכן מתכון',
+                'description-label': 'תיאור',
+                'description-placeholder': 'תיאור קצר של המתכון שלכם...',
+                'modal-description-title': 'תיאור',
+                'title-label': 'כותרת המתכון *',
+                'category-label': 'קטגוריה *',
+                'time-label': 'זמן הכנה (דקות) *',
+                'difficulty-label': 'רמת קושי *',
+                'ingredients-label': 'מצרכים *',
+                'instructions-label': 'הוראות הכנה *',
+                'category-pastries': 'מאפים',
+                'category-cakes': 'עוגות',
+                'category-cookies': 'עוגיות', 
+                'category-bread': 'לחם',
+                'category-desserts': 'קינוחים',
+                'category-cooking': 'מנות עיקריות',
+                'category-appetizers': 'מתאבנים',
+                'category-salads': 'סלטים',
+                'category-soups': 'מרקים',
+                'category-beverages': 'משקאות',
+                'difficulty-easy': 'קל',
+                'difficulty-medium': 'בינוני', 
+                'difficulty-hard': 'קשה',
+                'all-categories': 'כל הקטגוריות',
+                'all-difficulties': 'כל רמות הקושי'
             }
         };
 
@@ -1767,12 +1827,49 @@
             
             // Update select options
             const categorySelect = document.getElementById('recipeCategory');
+            const categoryFilter = document.getElementById('categoryFilter');
             const difficultySelect = document.getElementById('difficulty');
+            const difficultyFilter = document.getElementById('difficultyFilter');
+
             if (categorySelect) {
                 categorySelect.options[0].text = translations[currentLang]['category-placeholder'];
+                // Update category options
+                const categories = ['pastries', 'cakes', 'cookies', 'bread', 'desserts', 'cooking', 'appetizers', 'salads', 'soups', 'beverages'];
+                categories.forEach((cat, index) => {
+                    if (categorySelect.options[index + 1]) {
+                        categorySelect.options[index + 1].text = translations[currentLang][`category-${cat}`] || categorySelect.options[index + 1].text;
+                    }
+                });
             }
+
+            if (categoryFilter) {
+                categoryFilter.options[0].text = translations[currentLang]['all-categories'];
+                const categories = ['pastries', 'cakes', 'cookies', 'bread', 'desserts', 'cooking', 'appetizers', 'salads', 'soups', 'beverages'];
+                categories.forEach((cat, index) => {
+                    if (categoryFilter.options[index + 1]) {
+                        categoryFilter.options[index + 1].text = translations[currentLang][`category-${cat}`] || categoryFilter.options[index + 1].text;
+                    }
+                });
+            }
+
             if (difficultySelect) {
                 difficultySelect.options[0].text = translations[currentLang]['difficulty-placeholder'];
+                const difficulties = ['easy', 'medium', 'hard'];
+                difficulties.forEach((diff, index) => {
+                    if (difficultySelect.options[index + 1]) {
+                        difficultySelect.options[index + 1].text = translations[currentLang][`difficulty-${diff}`] || difficultySelect.options[index + 1].text;
+                    }
+                });
+            }
+
+            if (difficultyFilter) {
+                difficultyFilter.options[0].text = translations[currentLang]['all-difficulties'];
+                const difficulties = ['easy', 'medium', 'hard'];
+                difficulties.forEach((diff, index) => {
+                    if (difficultyFilter.options[index + 1]) {
+                        difficultyFilter.options[index + 1].text = translations[currentLang][`difficulty-${diff}`] || difficultyFilter.options[index + 1].text;
+                    }
+                });
             }
             
             updatePlaceholders();
@@ -2315,7 +2412,11 @@
                      <div>No Image</div>
                    </div>`;
 
-            const tagsHtml = recipe.tags && recipe.tags.length > 0 
+            const descriptionHtml = recipe.description && recipe.description.trim() 
+                ? `<div class="recipe-description-preview">${recipe.description.substring(0, 100)}${recipe.description.length > 100 ? '...' : ''}</div>`
+                : '';
+     
+                const tagsHtml = recipe.tags && recipe.tags.length > 0 
                 ? `<div class="recipe-tags">
                      ${recipe.tags.map(tag => `<span class="recipe-tag">${tag}</span>`).join('')}
                    </div>`
@@ -2353,6 +2454,7 @@
                         <span>${ratingDisplay.rating}</span>
                         <span class="rating-count">(${recipe.ratingsCount || 0})</span>
                     </div>
+                    ${descriptionHtml}
                     ${tagsHtml}
                 </div>
             `;
@@ -2445,7 +2547,19 @@
             } else {
                 modalTags.style.display = 'none';
             }
+            
+            modalRecipeTags = [...(recipe.tags || [])];
+            renderModalTags();
 
+            const modalDescription = document.getElementById('modalRecipeDescription');
+            const modalDescriptionText = document.getElementById('modalDescriptionText');
+            if (recipe.description && recipe.description.trim()) {
+                modalDescriptionText.textContent = recipe.description;
+                modalDescription.style.display = 'block';
+            } else {
+                modalDescription.style.display = 'none';
+            }
+                
             updateModalRating(recipe);
 
             const ingredientsList = document.getElementById('modalIngredientsList');
@@ -2524,6 +2638,7 @@
 			
 			formData.append('title', document.getElementById('recipeTitle').value);
 			formData.append('category', document.getElementById('recipeCategory').value);
+            formData.append('description', document.getElementById('recipeDescription').value);
 			formData.append('cookingTime', document.getElementById('cookingTime').value);
 			formData.append('difficulty', document.getElementById('difficulty').value);
 			formData.append('tags', JSON.stringify(recipeTags));
@@ -2672,7 +2787,22 @@
 			
 			document.getElementById('signInBtn').addEventListener('click', signIn);
 			document.getElementById('languageToggle').addEventListener('click', toggleLanguage);
+
+            const modalTagInput = document.getElementById('modalTagInput');
+            if (modalTagInput) {
+            modalTagInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const tagText = this.value.trim();
+                    if (tagText && !modalRecipeTags.includes(tagText.toLowerCase())) {
+                        addModalTag(tagText);
+                        this.value = '';
+                    }
+                }
+            });
+            }
         });
+
 		function addIngredientGroup() {
 			const container = document.getElementById('ingredientsContainer');
 			const groupCount = container.children.length;
@@ -2715,6 +2845,7 @@
 			// Fill basic form data
 			document.getElementById('recipeTitle').value = recipe.title;
 			document.getElementById('recipeCategory').value = recipe.category;
+            document.getElementById('recipeDescription').value = recipe.description || '';
 			document.getElementById('cookingTime').value = recipe.cookingTime;
 			document.getElementById('difficulty').value = recipe.difficulty;
 			
@@ -2815,6 +2946,7 @@
 			closeModal();
 			document.querySelector('.recipe-form').scrollIntoView({ behavior: 'smooth' });
 			
+            document.getElementById('form-title').textContent = currentLang === 'he' ? 'עדכן מתכון' : 'Update Recipe';
 			showNotification('Recipe loaded for editing!', 'info');
 		}
 
@@ -2823,6 +2955,7 @@
 			submitBtn.textContent = currentLang === 'he' ? 'שתף מתכון' : 'Share Recipe';
 			submitBtn.removeAttribute('data-editing');
 			submitBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)'; // Original blue gradient
+            document.getElementById('form-title').textContent = currentLang === 'he' ? 'הוסף מתכון חדש' : 'Add New Recipe';
 		}
 		// Tags Update Function
 		let modalRecipeTags = [];
@@ -2831,11 +2964,16 @@
 			if (!currentRecipeId) return;
 			
 			showLoading(true);
-			fetch(`/api/recipes/${currentRecipeId}/tags`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tags: modalRecipeTags })
-			})
+			getAuthHeaders().then(headers => {
+                return fetch(`/api/recipes/${currentRecipeId}/tags`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...headers
+                    },
+                    body: JSON.stringify({ tags: modalRecipeTags })
+                });
+            })
 			.then(response => response.json())
 			.then(() => {
 				showNotification('Tags updated successfully!');
@@ -2847,6 +2985,39 @@
 			.finally(() => showLoading(false));
 		}
 		
+        function renderModalTags() {
+            const wrapper = document.getElementById('modalTagsWrapper');
+            const input = document.getElementById('modalTagInput');
+            
+            // Remove existing tag chips
+            const existingTags = wrapper.querySelectorAll('.modal-tag-chip');
+            existingTags.forEach(tag => tag.remove());
+            
+            // Add current tags
+            modalRecipeTags.forEach(tag => {
+                const tagChip = document.createElement('div');
+                tagChip.className = 'modal-tag-chip';
+                tagChip.innerHTML = `
+                    <span>${tag}</span>
+                    <button type="button" class="modal-tag-remove" onclick="removeModalTag('${tag}')">×</button>
+                `;
+                wrapper.insertBefore(tagChip, input);
+            });
+        }
+
+        function addModalTag(tagText) {
+            const tag = tagText.toLowerCase();
+            if (modalRecipeTags.includes(tag)) return;
+            
+            modalRecipeTags.push(tag);
+            renderModalTags();
+        }
+
+        function removeModalTag(tagToRemove) {
+            modalRecipeTags = modalRecipeTags.filter(tag => tag !== tagToRemove);
+            renderModalTags();
+        }
+
 		function attachAutoAddListeners() {
 			// Auto-add ingredient when user types in the last ingredient field
 			document.addEventListener('input', function(e) {

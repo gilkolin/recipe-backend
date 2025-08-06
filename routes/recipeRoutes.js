@@ -75,6 +75,11 @@ const recipeSchema = new mongoose.Schema({
         ],
         lowercase: true
     },
+    description: {
+        type: String,
+        trim: true,
+        maxlength: 500
+    },
     cookingTime: {
         type: Number,
         required: true
@@ -197,7 +202,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         console.log('Raw tags string:', req.body.tags);
         console.log('=== POST CREATE RECIPE - DEBUGGING END ===');
 
-        const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
+        const { title, category, description, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
         // Extract user data from form
         const formCreatedBy = req.body.createdBy;
@@ -254,6 +259,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         const newRecipe = new Recipe({
             title: title.trim(),
             category: category.toLowerCase(),
+            description: description ? description.trim() : '', 
             cookingTime: Number(cookingTime),
             difficulty: difficulty.toLowerCase(),
             tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],
@@ -297,13 +303,18 @@ router.put('/:id', upload.single('image'), async (req, res) => {
         }
         console.log('Request body keys:', Object.keys(req.body));
         console.log('Request body values:', req.body);
+        console.log('Raw description string:', req.body.description);
         console.log('Raw ingredients string:', req.body.ingredients);
         console.log('Raw instructions string:', req.body.instructions);
         console.log('Raw tags string:', req.body.tags);
         console.log('=== PUT UPDATE RECIPE - DEBUGGING END ===');
 
+        // Check if req.body is undefined or empty
+        if (!req.body) {
+            return res.status(400).json({ message: 'Request body is missing' });
+        }
 
-        const { title, category, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
+        const { title, category, description, cookingTime, difficulty, tags, ingredients, instructions } = req.body;
 
         // Extract user data from form
         const formCreatedBy = req.body.createdBy;
@@ -359,6 +370,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
             {
                 title: title.trim(),
                 category: category.toLowerCase(),
+                description: description ? description.trim() : '',
                 cookingTime: Number(cookingTime),
                 difficulty: difficulty.toLowerCase(),
                 tags: Array.isArray(parsedTags) ? parsedTags.map(tag => tag.trim().toLowerCase()) : [],

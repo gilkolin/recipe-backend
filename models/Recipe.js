@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const recipeSchema = new mongoose.Schema({
     title: { type: String, required: true },
     category: { type: String, required: true },
+    description: { type: String, default: '' },
     cookingTime: { type: Number, required: true }, // in minutes
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], required: true },
     tags: [String],
